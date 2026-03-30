@@ -23,9 +23,7 @@ class Chamado
     private $dddUsuario;
     private $telefoneUsuario;
 
-    private $grupoAtendimento;
     private $tecnicoSupervisor;
-    private $diagnostico;
     private $dataAtendimento;
     private $solucao;
 
@@ -33,6 +31,7 @@ class Chamado
     private $dataFinalizacao;
 
     private $equipamentoId;
+    private $tecnicoId;
     private $criadoPor;
     private $status;
 
@@ -130,9 +129,20 @@ class Chamado
     {
         return $this->status;
     }
+
     public function setStatus($valor)
     {
         $this->status = $valor;
+    }
+
+    public function getTecnicoId()
+    {
+        return $this->tecnicoId;
+    }
+
+    public function setTecnicoId($valor)
+    {
+        $this->tecnicoId = $valor;
     }
 
     public function getTipoChamado()
@@ -216,15 +226,6 @@ class Chamado
         $this->telefoneUsuario = $valor;
     }
 
-    public function getGrupoAtendimento()
-    {
-        return $this->grupoAtendimento;
-    }
-    public function setGrupoAtendimento($valor)
-    {
-        $this->grupoAtendimento = $valor;
-    }
-
     public function getTecnicoSupervisor()
     {
         return $this->tecnicoSupervisor;
@@ -232,15 +233,6 @@ class Chamado
     public function setTecnicoSupervisor($valor)
     {
         $this->tecnicoSupervisor = $valor;
-    }
-
-    public function getDiagnostico()
-    {
-        return $this->diagnostico;
-    }
-    public function setDiagnostico($valor)
-    {
-        $this->diagnostico = $valor;
     }
 
     public function getDataAtendimento()

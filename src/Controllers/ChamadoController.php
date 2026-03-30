@@ -3,23 +3,34 @@
 class ChamadoController
 {
     private $service;
+    private $tecnicoService;
 
-    public function __construct(ChamadoService $service)
+    public function __construct(ChamadoService $service, TecnicoService $tecnicoService)
     {
         $this->service = $service;
+        $this->tecnicoService = $tecnicoService;
     }
 
     public function index()
     {
         $status = $_GET['status'] ?? null;
-        $local = $_GET['local'] ?? null;
-        $descricao = $_GET['descricao'] ?? null;
+        $chamadoId = $_GET['chamado_id'] ?? null;
+        $numeroSerie = $_GET['numero_serie'] ?? null;
 
-        if ($status || $local || $descricao) {
-            $chamados = $this->service->filtrar($status, $local, $descricao);
+        if (!empty($chamadoId)) {
+            $chamadoId = (int) $chamadoId;
+            if ($chamadoId <= 0) {
+                $chamadoId = null;
+            }
+        }
+
+        if ($status || $chamadoId || $numeroSerie) {
+            $chamados = $this->service->filtrar($status, $numeroSerie, $chamadoId);
         } else {
             $chamados = $this->service->listar();
         }
+
+        $tecnicos = $this->tecnicoService->listar();
 
         require_once __DIR__ . '/../views/chamados/index.php';
     }
@@ -27,37 +38,48 @@ class ChamadoController
     public function store()
     {
         $equipamentoId = $_POST['equipamento_id'] ?? null;
+        $tecnicoId = $_POST['tecnico_id'] ?? null;
 
         if (empty($equipamentoId)) {
             die('Erro: selecione um equipamento válido informando um número de série cadastrado.');
+        }
+
+        if (empty($tecnicoId)) {
+            die('Erro: selecione um técnico para o chamado.');
+        }
+
+        $tecnico = $this->tecnicoService->buscarPorId($tecnicoId);
+
+        if (!$tecnico) {
+            die('Erro: técnico selecionado não encontrado.');
         }
 
         $builder = new ChamadoBuilder();
 
         $chamado = $builder
             ->equipamentoId($equipamentoId)
+            ->tecnicoId($tecnicoId)
+            ->tecnico($tecnico['nome'])
             ->criadoPor($_POST['criado_por'] ?? null)
             ->status($_POST['status'] ?? 'ABERTO')
             ->tipoChamado($_POST['tipo_chamado'] ?? null)
             ->prioridade($_POST['prioridade'] ?? null)
-            ->tecnico($_POST['tecnico'] ?? null)
             ->assunto($_POST['assunto'] ?? null)
             ->descricao($_POST['descricao'] ?? null)
             ->nomeUsuario($_POST['nome_usuario'] ?? null)
             ->emailUsuario($_POST['email_usuario'] ?? null)
             ->dddUsuario($_POST['ddd_usuario'] ?? null)
             ->telefoneUsuario($_POST['telefone_usuario'] ?? null)
-            ->grupoAtendimento($_POST['grupo_atendimento'] ?? null)
             ->tecnicoSupervisor($_POST['tecnico_supervisor'] ?? null)
-            ->diagnostico($_POST['diagnostico'] ?? null)
             ->dataAtendimento($_POST['data_atendimento'] ?? null)
             ->solucao($_POST['solucao'] ?? null)
             ->build();
 
         $command = new CriarChamadoCommand($this->service, $chamado);
-        $command->execute();
+        $createdId = $command->execute();
 
-        header('Location: index.php');
+        $numeroChamado = str_pad($createdId, 5, '0', STR_PAD_LEFT);
+        header('Location: index.php?created=1&chamado_numero=' . urlencode($numeroChamado));
         exit;
     }
 

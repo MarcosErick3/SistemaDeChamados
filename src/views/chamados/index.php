@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="css/index.css">
     <title>ServiceDesk - Ordem de Serviço</title>
 </head>
 
@@ -94,7 +94,12 @@
 
                     <div class="field">
                         <label>Técnico Responsável</label>
-                        <input type="text" name="tecnico">
+                        <select name="tecnico_id" required>
+                            <option value="">Selecione o técnico</option>
+                            <?php foreach ($tecnicos as $tecnico): ?>
+                                <option value="<?= htmlspecialchars($tecnico['id']) ?>"><?= htmlspecialchars($tecnico['nome']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
                     <div class="field">
@@ -163,25 +168,11 @@
             <div class="section">
                 <div class="section-title">Informações de Tratamento</div>
                 <div class="grid-2">
-                    <div class="field">
-                        <label>Grupo</label>
-                        <input type="text" name="grupo_atendimento">
-                    </div>
-
-                    <div class="field">
-                        <label>Técnico / Supervisor</label>
-                        <input type="text" name="tecnico_supervisor">
-                    </div>
-
-                    <div class="field">
-                        <label>Diagnóstico</label>
-                        <input type="text" name="diagnostico">
-                    </div>
-
                     <div class="field full">
                         <label>Solução</label>
                         <textarea name="solucao"></textarea>
                     </div>
+                       
                 </div>
 
                 <div class="actions">
@@ -190,27 +181,33 @@
             </div>
         </form>
 
+        <?php if (!empty($_GET['created']) && !empty($_GET['chamado_numero'])): ?>
+            <div class="alert alert-success" style="margin-bottom: 20px;">
+                Chamado <strong>#<?= htmlspecialchars($_GET['chamado_numero']) ?></strong> criado com sucesso.
+            </div>
+        <?php endif; ?>
+
         <div class="section">
             <div class="section-title">Filtro de Chamados</div>
             <form method="GET" action="index.php" class="filter-form">
                 <div class="field">
                     <label>Status</label>
                     <select name="status">
-                        <option value="">Todos</option>
-                        <option value="ABERTO">ABERTO</option>
-                        <option value="EM ANDAMENTO">EM ANDAMENTO</option>
-                        <option value="FINALIZADO">FINALIZADO</option>
+                        <option value="" <?= empty($_GET['status']) ? 'selected' : '' ?>>Todos</option>
+                        <option value="ABERTO" <?= (($_GET['status'] ?? '') === 'ABERTO') ? 'selected' : '' ?>>ABERTO</option>
+                        <option value="EM ANDAMENTO" <?= (($_GET['status'] ?? '') === 'EM ANDAMENTO') ? 'selected' : '' ?>>EM ANDAMENTO</option>
+                        <option value="FINALIZADO" <?= (($_GET['status'] ?? '') === 'FINALIZADO') ? 'selected' : '' ?>>FINALIZADO</option>
                     </select>
                 </div>
 
                 <div class="field">
-                    <label>Local</label>
-                    <input type="text" name="local" placeholder="Digite o local">
+                    <label>ID/Número do Chamado</label>
+                    <input type="text" name="chamado_id" placeholder="Ex.: 1 ou 00001" value="<?= htmlspecialchars($_GET['chamado_id'] ?? '') ?>">
                 </div>
 
                 <div class="field">
-                    <label>Descrição</label>
-                    <input type="text" name="descricao" placeholder="Buscar por descrição ou assunto">
+                    <label>Nº Série</label>
+                    <input type="text" name="numero_serie" placeholder="Buscar por número de série" value="<?= htmlspecialchars($_GET['numero_serie'] ?? '') ?>">
                 </div>
 
                 <button type="submit" class="btn btn-primary">Filtrar</button>
@@ -237,13 +234,13 @@
                         <?php if (!empty($chamados)): ?>
                             <?php foreach ($chamados as $chamado): ?>
                                 <tr>
-                                    <td><?= $chamado['id'] ?></td>
-                                    <td><?= htmlspecialchars($chamado['assunto']) ?></td>
-                                    <td><?= htmlspecialchars($chamado['local']) ?></td>
-                                    <td><?= htmlspecialchars($chamado['status']) ?></td>
-                                    <td><?= htmlspecialchars($chamado['tecnico']) ?></td>
-                                    <td><?= htmlspecialchars($chamado['prioridade']) ?></td>
-                                    <td><?= htmlspecialchars($chamado['solucao']) ?></td>
+                                    <td>#<?= str_pad($chamado['id'] ?? 0, 5, '0', STR_PAD_LEFT) ?></td>
+                                    <td><?= htmlspecialchars($chamado['assunto'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($chamado['local'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($chamado['status'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($chamado['tecnico_nome'] ?? $chamado['tecnico'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($chamado['prioridade'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($chamado['solucao'] ?? '') ?></td>
                                     <td>
                                         <?php if ($chamado['status'] === 'ABERTO'): ?>
                                             <form method="POST" action="index.php?action=iniciar" class="inline-form">

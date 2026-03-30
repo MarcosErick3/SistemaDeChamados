@@ -39,8 +39,8 @@ class ChamadoService
         return $this->dao->delete($id);
     }
 
-    public function filtrar($status, $local, $descricao)
+    public function filtrar($status = null, $numeroSerie = null, $chamadoId = null)
     {
-        return $this->dao->filtrar($status, $local, $descricao);
+        return $this->dao->filtrar($status, $numeroSerie, $chamadoId);
     }
 }

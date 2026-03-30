@@ -7,6 +7,34 @@ class ChamadoDAO
     public function __construct(PDO $conn)
     {
         $this->conn = $conn;
+        $this->ensureSchema();
+    }
+
+    private function ensureSchema()
+    {
+        $dbName = $this->conn->query('SELECT DATABASE()')->fetchColumn();
+
+        $columns = [
+            'tecnico_id' => 'INT DEFAULT NULL',
+            'tecnico_supervisor' => 'VARCHAR(100) DEFAULT NULL',
+            'data_atendimento' => 'DATE DEFAULT NULL',
+            'solucao' => 'TEXT NULL'
+        ];
+
+        foreach ($columns as $column => $definition) {
+            $stmt = $this->conn->prepare(
+                'SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = :schema AND table_name = :table AND column_name = :column'
+            );
+            $stmt->execute([
+                ':schema' => $dbName,
+                ':table' => 'chamados',
+                ':column' => $column
+            ]);
+
+            if ((int)$stmt->fetchColumn() === 0) {
+                $this->conn->exec("ALTER TABLE chamados ADD COLUMN {$column} {$definition}");
+            }
+        }
     }
 
     public function create(Chamado $chamado)
@@ -17,6 +45,7 @@ class ChamadoDAO
                 status,
                 tipo_chamado,
                 prioridade,
+                tecnico_id,
                 tecnico,
                 assunto,
                 descricao,
@@ -24,9 +53,7 @@ class ChamadoDAO
                 email_usuario,
                 ddd_usuario,
                 telefone_usuario,
-                grupo_atendimento,
                 tecnico_supervisor,
-                diagnostico,
                 data_atendimento,
                 solucao
             ) VALUES (
@@ -35,6 +62,7 @@ class ChamadoDAO
                 :status,
                 :tipo_chamado,
                 :prioridade,
+                :tecnico_id,
                 :tecnico,
                 :assunto,
                 :descricao,
@@ -42,9 +70,7 @@ class ChamadoDAO
                 :email_usuario,
                 :ddd_usuario,
                 :telefone_usuario,
-                :grupo_atendimento,
                 :tecnico_supervisor,
-                :diagnostico,
                 :data_atendimento,
                 :solucao
             )";
@@ -56,6 +82,7 @@ class ChamadoDAO
         $stmt->bindValue(':status', $chamado->getStatus());
         $stmt->bindValue(':tipo_chamado', $chamado->getTipoChamado());
         $stmt->bindValue(':prioridade', $chamado->getPrioridade());
+        $stmt->bindValue(':tecnico_id', $chamado->getTecnicoId(), PDO::PARAM_INT);
         $stmt->bindValue(':tecnico', $chamado->getTecnico());
         $stmt->bindValue(':assunto', $chamado->getAssunto());
         $stmt->bindValue(':descricao', $chamado->getDescricao());
@@ -63,13 +90,17 @@ class ChamadoDAO
         $stmt->bindValue(':email_usuario', $chamado->getEmailUsuario());
         $stmt->bindValue(':ddd_usuario', $chamado->getDddUsuario());
         $stmt->bindValue(':telefone_usuario', $chamado->getTelefoneUsuario());
-        $stmt->bindValue(':grupo_atendimento', $chamado->getGrupoAtendimento());
         $stmt->bindValue(':tecnico_supervisor', $chamado->getTecnicoSupervisor());
-        $stmt->bindValue(':diagnostico', $chamado->getDiagnostico());
         $stmt->bindValue(':data_atendimento', $chamado->getDataAtendimento() ?: null);
         $stmt->bindValue(':solucao', $chamado->getSolucao());
 
-        return $stmt->execute();
+        $executed = $stmt->execute();
+
+        if ($executed) {
+            return (int) $this->conn->lastInsertId();
+        }
+
+        return 0;
     }
 
     public function findAll()
@@ -83,9 +114,11 @@ class ChamadoDAO
                 e.unidade,
                 e.local,
                 e.cidade,
-                e.uf
+                e.uf,
+                t.nome AS tecnico_nome
             FROM chamados c
             INNER JOIN equipamentos e ON e.id = c.equipamento_id
+            LEFT JOIN tecnicos t ON t.id = c.tecnico_id
             ORDER BY c.id DESC";
 
         return $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
@@ -134,7 +167,7 @@ class ChamadoDAO
         return $stmt->execute();
     }
 
-    public function filtrar($status = null, $local = null, $descricao = null)
+    public function filtrar($status = null, $numeroSerie = null, $chamadoId = null)
     {
         $sql = "SELECT 
                 c.*,
@@ -157,14 +190,14 @@ class ChamadoDAO
             $params[':status'] = $status;
         }
 
-        if (!empty($local)) {
-            $sql .= " AND e.local LIKE :local";
-            $params[':local'] = "%{$local}%";
+        if (!empty($chamadoId)) {
+            $sql .= " AND c.id = :chamado_id";
+            $params[':chamado_id'] = $chamadoId;
         }
 
-        if (!empty($descricao)) {
-            $sql .= " AND (c.descricao LIKE :descricao OR c.assunto LIKE :descricao)";
-            $params[':descricao'] = "%{$descricao}%";
+        if (!empty($numeroSerie)) {
+            $sql .= " AND e.numero_serie LIKE :numero_serie";
+            $params[':numero_serie'] = "%{$numeroSerie}%";
         }
 
         $sql .= " ORDER BY c.id DESC";

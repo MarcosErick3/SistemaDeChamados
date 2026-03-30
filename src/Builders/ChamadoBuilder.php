@@ -76,6 +76,13 @@ class ChamadoBuilder
         $this->chamado->setTecnico($valor);
         return $this;
     }
+
+    public function tecnicoId($valor)
+    {
+        $this->chamado->setTecnicoId($valor);
+        return $this;
+    }
+
     public function assunto($valor)
     {
         $this->chamado->setAssunto($valor);
@@ -108,19 +115,9 @@ class ChamadoBuilder
         return $this;
     }
 
-    public function grupoAtendimento($valor)
-    {
-        $this->chamado->setGrupoAtendimento($valor);
-        return $this;
-    }
     public function tecnicoSupervisor($valor)
     {
         $this->chamado->setTecnicoSupervisor($valor);
-        return $this;
-    }
-    public function diagnostico($valor)
-    {
-        $this->chamado->setDiagnostico($valor);
         return $this;
     }
     public function dataAtendimento($valor)
