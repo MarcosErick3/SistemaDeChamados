@@ -125,7 +125,22 @@ class ChamadoDAO
     }
     public function findById($id)
     {
-        $sql = "SELECT * FROM chamados WHERE id = :id";
+        $sql = "SELECT 
+                c.*,
+                e.numero_serie,
+                e.numero_patrimonio,
+                e.descricao AS descricao_equipamento,
+                e.equipamento,
+                e.unidade,
+                e.local,
+                e.cidade,
+                e.uf,
+                t.nome AS tecnico_nome
+            FROM chamados c
+            INNER JOIN equipamentos e ON e.id = c.equipamento_id
+            LEFT JOIN tecnicos t ON t.id = c.tecnico_id
+            WHERE c.id = :id";
+
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
@@ -201,6 +216,104 @@ class ChamadoDAO
         }
 
         $sql .= " ORDER BY c.id DESC";
+
+        $stmt = $this->conn->prepare($sql);
+
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function filtrarPorTecnico($tecnicoId)
+    {
+        $sql = "SELECT 
+                c.*,
+                e.numero_serie,
+                e.numero_patrimonio,
+                e.descricao AS descricao_equipamento,
+                e.equipamento,
+                e.unidade,
+                e.local,
+                e.cidade,
+                e.uf,
+                t.nome AS tecnico_nome
+            FROM chamados c
+            INNER JOIN equipamentos e ON e.id = c.equipamento_id
+            LEFT JOIN tecnicos t ON t.id = c.tecnico_id
+            WHERE c.tecnico_id = :tecnico_id
+            ORDER BY c.id DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':tecnico_id', $tecnicoId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarHistorico()
+    {
+        $sql = "SELECT 
+                c.*,
+                e.numero_serie,
+                e.numero_patrimonio,
+                e.descricao AS descricao_equipamento,
+                e.equipamento,
+                e.unidade,
+                e.local,
+                e.cidade,
+                e.uf,
+                t.nome AS tecnico_nome
+            FROM chamados c
+            INNER JOIN equipamentos e ON e.id = c.equipamento_id
+            LEFT JOIN tecnicos t ON t.id = c.tecnico_id
+            ORDER BY c.data_finalizacao DESC, c.id DESC";
+
+        return $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function filtrarHistorico($tecnicoId = null, $numeroSerie = null, $chamadoId = null, $status = null)
+    {
+        $sql = "SELECT 
+                c.*,
+                e.numero_serie,
+                e.numero_patrimonio,
+                e.descricao AS descricao_equipamento,
+                e.equipamento,
+                e.unidade,
+                e.local,
+                e.cidade,
+                e.uf,
+                t.nome AS tecnico_nome
+            FROM chamados c
+            INNER JOIN equipamentos e ON e.id = c.equipamento_id
+            LEFT JOIN tecnicos t ON t.id = c.tecnico_id
+            WHERE 1=1";
+
+        $params = [];
+
+        if (!empty($tecnicoId)) {
+            $sql .= " AND c.tecnico_id = :tecnico_id";
+            $params[':tecnico_id'] = $tecnicoId;
+        }
+
+        if (!empty($status)) {
+            $sql .= " AND c.status = :status";
+            $params[':status'] = $status;
+        }
+
+        if (!empty($chamadoId)) {
+            $sql .= " AND c.id = :chamado_id";
+            $params[':chamado_id'] = $chamadoId;
+        }
+
+        if (!empty($numeroSerie)) {
+            $sql .= " AND e.numero_serie LIKE :numero_serie";
+            $params[':numero_serie'] = "%{$numeroSerie}%";
+        }
+
+        $sql .= " ORDER BY c.data_finalizacao DESC, c.id DESC";
 
         $stmt = $this->conn->prepare($sql);
 

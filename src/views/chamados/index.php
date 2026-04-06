@@ -11,18 +11,65 @@
 <body>
 
     <div class="topbar">
-        <nav>
-            <a href="index.php">Pesquisa</a>
-            <a href="index.php">Meus Chamados</a>
-            <a href="index.php">Ordem de Serviço</a>
-            <a href="index.php">Histórico</a>
-            <a href="index.php">Pendências</a>
-            <a href="index.php">Início</a>
-        </nav>
+        <div class="topbar-content">
+            <div class="topbar-logo">
+                <span class="logo-icon">📋</span>
+                <span class="logo-text">ServiceDesk</span>
+            </div>
+            <nav class="topbar-nav">
+                <a href="index.php?action=index" class="nav-item <?= (empty($_GET['meus_chamados']) && empty($_GET['historico'])) ? 'active' : '' ?>">
+                    <span class="nav-icon">🔍</span>
+                    <span>Pesquisa</span>
+                </a>
+                <a href="index.php?action=index&meus_chamados=1" class="nav-item <?= (!empty($_GET['meus_chamados'])) ? 'active' : '' ?>">
+                    <span class="nav-icon">📝</span>
+                    <span>Meus Chamados</span>
+                </a>
+                <a href="index.php?action=historico" class="nav-item <?= (isset($_GET['action']) && $_GET['action'] === 'historico') ? 'active' : '' ?>">
+                    <span class="nav-icon">📚</span>
+                    <span>Histórico</span>
+                </a>
+                <a href="index.php?action=perfil" class="nav-item <?= (isset($_GET['action']) && $_GET['action'] === 'perfil') ? 'active' : '' ?>">
+                    <span class="nav-icon">👤</span>
+                    <span>Perfil</span>
+                </a>
+            </nav>
+            <div class="topbar-user">
+                <?php if(isset($_SESSION['user'])): ?>
+                    <span class="user-badge">
+                        <span class="user-icon">👨‍💼</span>
+                        <span class="user-name"><?= htmlspecialchars($_SESSION['user']['nome']) ?></span>
+                    </span>
+                    <a href="index.php?action=logout" class="nav-item logout">
+                        <span class="nav-icon">🚪</span>
+                        <span>Sair</span>
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <div class="breadcrumb-bar">
+        <div class="breadcrumb">
+            <a href="index.php?action=index">📊 Início</a>
+            <?php if(!empty($_GET['meus_chamados'])): ?>
+                <span class="separator">/</span>
+                <span>Meus Chamados</span>
+            <?php else: ?>
+                <span class="separator">/</span>
+                <span>Ordem de Serviço</span>
+            <?php endif; ?>
+        </div>
     </div>
 
     <div class="container">
-        <h1 class="page-title">ServiceDesk - Ordem de Serviço</h1>
+        <h1 class="page-title">
+            ServiceDesk - Ordem de Serviço
+            <?php 
+                if (!empty($_GET['meus_chamados'])) {
+                    echo ' - Meus Chamados';
+                }
+            ?>
+        </h1>
 
         <form method="POST" action="index.php?action=store">
             <div class="section">
@@ -80,14 +127,14 @@
                 <div class="grid-3">
                     <div class="field">
                         <label>Criado por</label>
-                        <input type="text" name="criado_por" value="Marcos Medeiros">
+                        <input type="text" name="criado_por" value="<?= isset($_SESSION['user']) ? htmlspecialchars($_SESSION['user']['nome']) : 'Técnico' ?>" readonly>
                     </div>
 
                     <div class="field">
                         <label>Status</label>
                         <select name="status">
                             <option value="ABERTO">ABERTO</option>
-                            <option value="EM ANDAMENTO">EM ANDAMENTO</option>
+                            <option value="EM ANDAMENTO" selected>EM ANDAMENTO</option>
                             <option value="FINALIZADO">FINALIZADO</option>
                         </select>
                     </div>
@@ -186,93 +233,6 @@
                 Chamado <strong>#<?= htmlspecialchars($_GET['chamado_numero']) ?></strong> criado com sucesso.
             </div>
         <?php endif; ?>
-
-        <div class="section">
-            <div class="section-title">Filtro de Chamados</div>
-            <form method="GET" action="index.php" class="filter-form">
-                <div class="field">
-                    <label>Status</label>
-                    <select name="status">
-                        <option value="" <?= empty($_GET['status']) ? 'selected' : '' ?>>Todos</option>
-                        <option value="ABERTO" <?= (($_GET['status'] ?? '') === 'ABERTO') ? 'selected' : '' ?>>ABERTO</option>
-                        <option value="EM ANDAMENTO" <?= (($_GET['status'] ?? '') === 'EM ANDAMENTO') ? 'selected' : '' ?>>EM ANDAMENTO</option>
-                        <option value="FINALIZADO" <?= (($_GET['status'] ?? '') === 'FINALIZADO') ? 'selected' : '' ?>>FINALIZADO</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>ID/Número do Chamado</label>
-                    <input type="text" name="chamado_id" placeholder="Ex.: 1 ou 00001" value="<?= htmlspecialchars($_GET['chamado_id'] ?? '') ?>">
-                </div>
-
-                <div class="field">
-                    <label>Nº Série</label>
-                    <input type="text" name="numero_serie" placeholder="Buscar por número de série" value="<?= htmlspecialchars($_GET['numero_serie'] ?? '') ?>">
-                </div>
-
-                <button type="submit" class="btn btn-primary">Filtrar</button>
-            </form>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Lista de Chamados</div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Assunto</th>
-                            <th>Local</th>
-                            <th>Status</th>
-                            <th>Técnico</th>
-                            <th>Prioridade</th>
-                            <th>Solução</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!empty($chamados)): ?>
-                            <?php foreach ($chamados as $chamado): ?>
-                                <tr>
-                                    <td>#<?= str_pad($chamado['id'] ?? 0, 5, '0', STR_PAD_LEFT) ?></td>
-                                    <td><?= htmlspecialchars($chamado['assunto'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($chamado['local'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($chamado['status'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($chamado['tecnico_nome'] ?? $chamado['tecnico'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($chamado['prioridade'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($chamado['solucao'] ?? '') ?></td>
-                                    <td>
-                                        <?php if ($chamado['status'] === 'ABERTO'): ?>
-                                            <form method="POST" action="index.php?action=iniciar" class="inline-form">
-                                                <input type="hidden" name="id" value="<?= $chamado['id'] ?>">
-                                                <button type="submit" class="btn btn-secondary">Iniciar</button>
-                                            </form>
-                                        <?php endif; ?>
-
-                                        <?php if ($chamado['status'] === 'EM ANDAMENTO'): ?>
-                                            <form method="POST" action="index.php?action=finalizar" class="inline-form">
-                                                <input type="hidden" name="id" value="<?= $chamado['id'] ?>">
-                                                <input type="text" name="solucao" placeholder="Digite a solução" required>
-                                                <button type="submit" class="btn btn-success">Finalizar</button>
-                                            </form>
-                                        <?php endif; ?>
-
-                                        <form method="POST" action="index.php?action=delete" class="inline-form" onsubmit="return confirm('Deseja excluir este chamado?')">
-                                            <input type="hidden" name="id" value="<?= $chamado['id'] ?>">
-                                            <button type="submit" class="btn btn-danger">Excluir</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="8">Nenhum chamado encontrado.</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

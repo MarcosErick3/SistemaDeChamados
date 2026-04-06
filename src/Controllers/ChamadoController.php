@@ -16,6 +16,7 @@ class ChamadoController
         $status = $_GET['status'] ?? null;
         $chamadoId = $_GET['chamado_id'] ?? null;
         $numeroSerie = $_GET['numero_serie'] ?? null;
+        $meusChamados = $_GET['meus_chamados'] ?? null;
 
         if (!empty($chamadoId)) {
             $chamadoId = (int) $chamadoId;
@@ -24,8 +25,15 @@ class ChamadoController
             }
         }
 
+        $tecnicoId = null;
+        if (isset($_SESSION['user']) && isset($_SESSION['user']['id'])) {
+            $tecnicoId = $_SESSION['user']['id'];
+        }
+
         if ($status || $chamadoId || $numeroSerie) {
             $chamados = $this->service->filtrar($status, $numeroSerie, $chamadoId);
+        } elseif (!empty($meusChamados) && $tecnicoId) {
+            $chamados = $this->service->filtrarPorTecnico($tecnicoId);
         } else {
             $chamados = $this->service->listar();
         }
@@ -119,6 +127,83 @@ class ChamadoController
         }
 
         header('Location: index.php');
+        exit;
+    }
+
+    public function historico()
+    {
+        $status = trim($_GET['status'] ?? '');
+        $chamadoId = trim($_GET['chamado_id'] ?? '');
+        $numeroSerie = trim($_GET['numero_serie'] ?? '');
+        $tecnicoFilter = trim($_GET['tecnico_filter'] ?? '');
+
+        if ($chamadoId !== '') {
+            $chamadoId = (int) $chamadoId;
+            if ($chamadoId <= 0) {
+                $chamadoId = null;
+            }
+        } else {
+            $chamadoId = null;
+        }
+
+        if ($numeroSerie === '') {
+            $numeroSerie = null;
+        }
+
+        if ($tecnicoFilter === '') {
+            $tecnicoFilter = null;
+        }
+
+        if ($status === '') {
+            $status = null;
+        }
+
+        if ($status || $chamadoId || $numeroSerie || $tecnicoFilter) {
+            $chamados = $this->service->filtrarHistorico($tecnicoFilter, $numeroSerie, $chamadoId, $status);
+        } else {
+            $chamados = $this->service->listarHistorico();
+        }
+
+        $tecnicos = $this->tecnicoService->listar();
+
+        require_once __DIR__ . '/../views/chamados/historico.php';
+    }
+
+    public function show()
+    {
+        $id = $_GET['id'] ?? null;
+        if (empty($id) || !is_numeric($id)) {
+            header('Location: index.php?action=historico');
+            exit;
+        }
+
+        $chamado = $this->service->buscarPorId((int) $id);
+        if (!$chamado) {
+            header('Location: index.php?action=historico');
+            exit;
+        }
+
+        require_once __DIR__ . '/../views/chamados/show.php';
+    }
+
+    public function update()
+    {
+        $id = $_POST['id'] ?? null;
+        $status = $_POST['status'] ?? null;
+        $solucao = $_POST['solucao'] ?? '';
+
+        if (empty($id) || !is_numeric($id)) {
+            header('Location: index.php?action=historico');
+            exit;
+        }
+
+        if ($status === 'FINALIZADO') {
+            $this->service->finalizar((int) $id, $solucao);
+        } else {
+            $this->service->atualizarStatus((int) $id, $status);
+        }
+
+        header('Location: index.php?action=show&id=' . (int) $id);
         exit;
     }
 }

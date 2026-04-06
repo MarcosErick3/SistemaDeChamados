@@ -5,6 +5,7 @@ class Tecnico
     private $id;
     private $nome;
     private $email;
+    private $senha;
     private $telefone;
 
     public function getId()
@@ -45,5 +46,15 @@ class Tecnico
     public function setTelefone($telefone)
     {
         $this->telefone = $telefone;
+    }
+
+    public function getSenha()
+    {
+        return $this->senha;
+    }
+
+    public function setSenha($senha)
+    {
+        $this->senha = $senha;
     }
 }

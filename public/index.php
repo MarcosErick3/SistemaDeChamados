@@ -19,6 +19,7 @@ require_once '../src/Commands/FinalizarChamadoCommand.php';
 
 require_once '../src/Controllers/ChamadoController.php';
 require_once '../src/Controllers/EquipamentoController.php';
+require_once '../src/Controllers/LoginController.php';
 require_once '../src/Models/Tecnico.php';
 require_once '../src/DAO/TecnicoDAO.php';
 require_once '../src/Services/TecnicoService.php';
@@ -35,8 +36,15 @@ $tecnicoService = new TecnicoService($tecnicoDao);
 
 $chamadoController = new ChamadoController($service, $tecnicoService);
 $equipamentoController = new EquipamentoController($equipamentoDao);
+$loginController = new LoginController($tecnicoDao);
 
 $action = $_GET['action'] ?? 'index';
+
+session_start();
+if (!isset($_SESSION['user']) && $action !== 'login') {
+    header('Location: index.php?action=login');
+    exit;
+}
 
 switch ($action) {
     case 'store':
@@ -57,6 +65,30 @@ switch ($action) {
 
     case 'buscarEquipamento':
         $equipamentoController->buscarPorNumeroSerie();
+        break;
+
+    case 'login':
+        $loginController->login();
+        break;
+
+    case 'logout':
+        $loginController->logout();
+        break;
+
+    case 'perfil':
+        $loginController->perfil();
+        break;
+
+    case 'historico':
+        $chamadoController->historico();
+        break;
+
+    case 'show':
+        $chamadoController->show();
+        break;
+
+    case 'update':
+        $chamadoController->update();
         break;
 
     default:
