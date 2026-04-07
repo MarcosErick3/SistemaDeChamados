@@ -1,69 +1,28 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/index.css">
-    <title>ServiceDesk - Histórico</title>
+    <link rel="stylesheet" href="css/index.css?v=2">
+    <title>ServiceDesk - Historico</title>
 </head>
 
 <body>
 
-    <div class="topbar">
-        <div class="topbar-content">
-            <div class="topbar-logo">
-                <span class="logo-icon">📋</span>
-                <span class="logo-text">ServiceDesk</span>
-            </div>
-            <nav class="topbar-nav">
-                <a href="index.php?action=index" class="nav-item">
-                    <span class="nav-icon">🔍</span>
-                    <span>Pesquisa</span>
-                </a>
-                <a href="index.php?action=index&meus_chamados=1" class="nav-item">
-                    <span class="nav-icon">📝</span>
-                    <span>Meus Chamados</span>
-                </a>
-                <a href="index.php?action=historico" class="nav-item active">
-                    <span class="nav-icon">📚</span>
-                    <span>Histórico</span>
-                </a>
-                <a href="index.php?action=perfil" class="nav-item">
-                    <span class="nav-icon">👤</span>
-                    <span>Perfil</span>
-                </a>
-            </nav>
-            <div class="topbar-user">
-                <?php if(isset($_SESSION['user'])): ?>
-                    <span class="user-badge">
-                        <span class="user-icon">👨‍💼</span>
-                        <span class="user-name"><?= htmlspecialchars($_SESSION['user']['nome']) ?></span>
-                    </span>
-                    <a href="index.php?action=logout" class="nav-item logout">
-                        <span class="nav-icon">🚪</span>
-                        <span>Sair</span>
-                    </a>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-    <div class="breadcrumb-bar">
-        <div class="breadcrumb">
-            <a href="index.php?action=index">📊 Início</a>
-            <span class="separator">/</span>
-            <span>Histórico</span>
-        </div>
-    </div>
+    <?php
+    $topbarActive = 'historico';
+    require __DIR__ . '/../partials/barra-superior.php';
+    ?>
 
     <div class="container">
-        <h1 class="page-title">ServiceDesk - Histórico de Chamados</h1>
+        <h1 class="page-title">ServiceDesk - Historico de Chamados</h1>
 
         <div class="section">
-            <div class="section-title">Filtro de Histórico</div>
+            <div class="section-title">Filtro de Historico</div>
             <form method="GET" action="index.php?action=historico" class="filter-form">
                 <input type="hidden" name="action" value="historico">
-                
+
                 <div class="field">
                     <label>Status</label>
                     <select name="status">
@@ -75,12 +34,11 @@
                 </div>
 
                 <div class="field">
-                    <label>Técnico</label>
+                    <label>Tecnico</label>
                     <select name="tecnico_filter">
                         <option value="">Todos</option>
                         <?php foreach ($tecnicos as $tecnico): ?>
-                            <option value="<?= htmlspecialchars($tecnico['id']) ?>" 
-                                <?= (($_GET['tecnico_filter'] ?? '') === (string)$tecnico['id']) ? 'selected' : '' ?>>
+                            <option value="<?= htmlspecialchars($tecnico['id']) ?>" <?= (($_GET['tecnico_filter'] ?? '') === (string) $tecnico['id']) ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($tecnico['nome']) ?>
                             </option>
                         <?php endforeach; ?>
@@ -88,12 +46,12 @@
                 </div>
 
                 <div class="field">
-                    <label>Nº Série</label>
-                    <input type="text" name="numero_serie" placeholder="Buscar por número de série" value="<?= htmlspecialchars($_GET['numero_serie'] ?? '') ?>">
+                    <label>Numero Serie</label>
+                    <input type="text" name="numero_serie" placeholder="Buscar por numero de serie" value="<?= htmlspecialchars($_GET['numero_serie'] ?? '') ?>">
                 </div>
 
                 <div class="field">
-                    <label>ID/Número do Chamado</label>
+                    <label>ID/Numero do Chamado</label>
                     <input type="text" name="chamado_id" placeholder="Ex.: 1 ou 00001" value="<?= htmlspecialchars($_GET['chamado_id'] ?? '') ?>">
                 </div>
 
@@ -102,7 +60,7 @@
         </div>
 
         <div class="section">
-            <div class="section-title">Histórico de Chamados</div>
+            <div class="section-title">Historico de Chamados</div>
             <div class="table-wrapper">
                 <table>
                     <thead>
@@ -110,11 +68,11 @@
                             <th>ID</th>
                             <th>Assunto</th>
                             <th>Local</th>
-                            <th>Técnico</th>
+                            <th>Tecnico</th>
                             <th>Prioridade</th>
                             <th>Criado em</th>
                             <th>Finalizado em</th>
-                            <th>Solução</th>
+                            <th>Solucao</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -122,10 +80,10 @@
                             <?php foreach ($chamados as $chamado): ?>
                                 <tr>
                                     <td>
-                                        <a href="index.php?action=show&id=<?= $chamado['id'] ?>">#<?= str_pad($chamado['id'] ?? 0, 5, '0', STR_PAD_LEFT) ?></a>
+                                        <a href="index.php?action=detalhes&id=<?= $chamado['id'] ?>">#<?= str_pad($chamado['id'] ?? 0, 5, '0', STR_PAD_LEFT) ?></a>
                                     </td>
                                     <td>
-                                        <a href="index.php?action=show&id=<?= $chamado['id'] ?>"><?= htmlspecialchars($chamado['assunto'] ?? '') ?></a>
+                                        <a href="index.php?action=detalhes&id=<?= $chamado['id'] ?>"><?= htmlspecialchars($chamado['assunto'] ?? '') ?></a>
                                     </td>
                                     <td><?= htmlspecialchars($chamado['local'] ?? '') ?></td>
                                     <td><?= htmlspecialchars($chamado['tecnico_nome'] ?? $chamado['tecnico'] ?? '') ?></td>

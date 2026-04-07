@@ -137,6 +137,12 @@ class ChamadoBuilder
     return $this;
 }
 
+    public function pdfPath($valor)
+    {
+        $this->chamado->setPdfPath($valor);
+        return $this;
+    }
+
     public function build()
     {
         return $this->chamado;

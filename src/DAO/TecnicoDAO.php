@@ -11,6 +11,16 @@ class TecnicoDAO
 
     public function create(Tecnico $tecnico)
     {
+        // Verificar se já existe um técnico com o mesmo email
+        $sqlCheck = "SELECT COUNT(*) FROM tecnicos WHERE email = :email";
+        $stmtCheck = $this->conn->prepare($sqlCheck);
+        $stmtCheck->bindValue(':email', $tecnico->getEmail());
+        $stmtCheck->execute();
+        
+        if ($stmtCheck->fetchColumn() > 0) {
+            throw new Exception('Já existe um técnico cadastrado com este email.');
+        }
+
         $sql = "INSERT INTO tecnicos (nome, email, telefone, senha) VALUES (:nome, :email, :telefone, :senha)";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue(':nome', $tecnico->getNome());
@@ -31,7 +41,13 @@ class TecnicoDAO
 
     public function findAll()
     {
-        $sql = "SELECT * FROM tecnicos ORDER BY nome ASC";
+        // Query compatível com sql_mode=only_full_group_by
+        // Seleciona apenas o registro mais antigo (menor ID) para cada email
+        $sql = "SELECT t1.id, t1.nome, t1.email, t1.telefone
+                FROM tecnicos t1
+                LEFT JOIN tecnicos t2 ON t1.email = t2.email AND t1.id > t2.id
+                WHERE t2.id IS NULL
+                ORDER BY t1.nome ASC";
         return $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 

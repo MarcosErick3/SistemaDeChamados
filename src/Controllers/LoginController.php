@@ -9,7 +9,7 @@ class LoginController
         $this->tecnicoDao = $tecnicoDao;
     }
 
-    public function login()
+    public function entrar()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = $_POST['email'] ?? '';
@@ -25,20 +25,30 @@ class LoginController
             }
         }
 
-        require_once __DIR__ . '/../views/login.php';
+        require_once __DIR__ . '/../views/entrar.php';
+    }
+
+    public function login()
+    {
+        $this->entrar();
+    }
+
+    public function sair()
+    {
+        session_destroy();
+        header('Location: index.php?action=entrar');
+        exit;
     }
 
     public function logout()
     {
-        session_destroy();
-        header('Location: index.php?action=login');
-        exit;
+        $this->sair();
     }
 
     public function perfil()
     {
         if (!isset($_SESSION['user'])) {
-            header('Location: index.php?action=login');
+            header('Location: index.php?action=entrar');
             exit;
         }
 

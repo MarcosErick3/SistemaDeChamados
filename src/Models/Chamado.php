@@ -34,6 +34,7 @@ class Chamado
     private $tecnicoId;
     private $criadoPor;
     private $status;
+    private $pdfPath;
 
     public function getId()
     {
@@ -214,7 +215,7 @@ class Chamado
     }
     public function setDddUsuario($valor)
     {
-        $this->dddUsuario = $valor;
+        $this->dddUsuario = $this->normalizeDddField($valor);
     }
 
     public function getTelefoneUsuario()
@@ -223,7 +224,7 @@ class Chamado
     }
     public function setTelefoneUsuario($valor)
     {
-        $this->telefoneUsuario = $valor;
+        $this->telefoneUsuario = $this->normalizeDigitsField($valor, 20);
     }
 
     public function getTecnicoSupervisor()
@@ -278,5 +279,45 @@ class Chamado
     public function setEquipamentoId($equipamentoId)
     {
         $this->equipamentoId = $equipamentoId;
+    }
+
+    public function getPdfPath()
+    {
+        return $this->pdfPath;
+    }
+    public function setPdfPath($pdfPath)
+    {
+        $this->pdfPath = $pdfPath;
+    }
+
+    private function normalizeDigitsField($valor, $maxLength)
+    {
+        $digits = preg_replace('/\D+/', '', (string) ($valor ?? ''));
+
+        if ($digits === null || $digits === '') {
+            return null;
+        }
+
+        return substr($digits, 0, $maxLength);
+    }
+
+    private function normalizeDddField($valor)
+    {
+        $digits = preg_replace('/\D+/', '', (string) ($valor ?? ''));
+
+        if ($digits === null || $digits === '') {
+            return null;
+        }
+
+        if (strpos($digits, '55') === 0 && strlen($digits) > 2) {
+            $digits = substr($digits, 2);
+        }
+
+        $digits = ltrim($digits, '0');
+        if ($digits === '') {
+            return null;
+        }
+
+        return substr($digits, 0, 2);
     }
 }

@@ -1,0 +1,14 @@
+{
+    "name": "marcoserick3/sistema-de-chamados",
+    "description": "Sistema de Chamados",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "fpdf/fpdf": "^1.86"
+    },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        }
+    }
+}

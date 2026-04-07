@@ -1,28 +1,24 @@
 <?php
 
-require_once '../config/Database.php';
+spl_autoload_register(function ($class) {
+    $directories = [
+        __DIR__ . '/../config',
+        __DIR__ . '/../src/Models',
+        __DIR__ . '/../src/Builders',
+        __DIR__ . '/../src/DAO',
+        __DIR__ . '/../src/Services',
+        __DIR__ . '/../src/Commands',
+        __DIR__ . '/../src/Controllers',
+    ];
 
-require_once '../src/Models/Chamado.php';
-require_once '../src/Models/Equipamento.php';
-
-require_once '../src/Builders/ChamadoBuilder.php';
-
-require_once '../src/DAO/ChamadoDAO.php';
-require_once '../src/DAO/EquipamentoDAO.php';
-
-require_once '../src/Services/ChamadoService.php';
-
-require_once '../src/Commands/Command.php';
-require_once '../src/Commands/CriarChamadoCommand.php';
-require_once '../src/Commands/IniciarChamadoCommand.php';
-require_once '../src/Commands/FinalizarChamadoCommand.php';
-
-require_once '../src/Controllers/ChamadoController.php';
-require_once '../src/Controllers/EquipamentoController.php';
-require_once '../src/Controllers/LoginController.php';
-require_once '../src/Models/Tecnico.php';
-require_once '../src/DAO/TecnicoDAO.php';
-require_once '../src/Services/TecnicoService.php';
+    foreach ($directories as $directory) {
+        $file = $directory . '/' . $class . '.php';
+        if (is_file($file)) {
+            require_once $file;
+            return;
+        }
+    }
+});
 
 $database = new Database();
 $conn = $database->connect();
@@ -33,46 +29,42 @@ $tecnicoDao = new TecnicoDAO($conn);
 
 $service = new ChamadoService($chamadoDao);
 $tecnicoService = new TecnicoService($tecnicoDao);
+$pdfService = new PdfService();
 
-$chamadoController = new ChamadoController($service, $tecnicoService);
+$chamadoController = new ChamadoController($service, $tecnicoService, $pdfService);
 $equipamentoController = new EquipamentoController($equipamentoDao);
 $loginController = new LoginController($tecnicoDao);
 
-$action = $_GET['action'] ?? 'index';
+$action = $_GET['action'] ?? 'listar';
 
 session_start();
-if (!isset($_SESSION['user']) && $action !== 'login') {
-    header('Location: index.php?action=login');
+if (!isset($_SESSION['user']) && !in_array($action, ['entrar', 'login'], true)) {
+    header('Location: index.php?action=entrar');
     exit;
 }
 
 switch ($action) {
+    case 'listar':
+        $chamadoController->listar();
+        break;
+
+    case 'salvar':
     case 'store':
-        $chamadoController->store();
-        break;
-
-    case 'iniciar':
-        $chamadoController->iniciar();
-        break;
-
-    case 'finalizar':
-        $chamadoController->finalizar();
-        break;
-
-    case 'delete':
-        $chamadoController->delete();
+        $chamadoController->salvar();
         break;
 
     case 'buscarEquipamento':
         $equipamentoController->buscarPorNumeroSerie();
         break;
 
+    case 'entrar':
     case 'login':
-        $loginController->login();
+        $loginController->entrar();
         break;
 
+    case 'sair':
     case 'logout':
-        $loginController->logout();
+        $loginController->sair();
         break;
 
     case 'perfil':
@@ -83,15 +75,18 @@ switch ($action) {
         $chamadoController->historico();
         break;
 
+    case 'detalhes':
     case 'show':
-        $chamadoController->show();
+        $chamadoController->detalhes();
         break;
 
+    case 'atualizar':
     case 'update':
-        $chamadoController->update();
+        $chamadoController->atualizar();
         break;
 
+    case 'index':
     default:
-        $chamadoController->index();
+        $chamadoController->listar();
         break;
 }

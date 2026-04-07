@@ -18,7 +18,8 @@ class ChamadoDAO
             'tecnico_id' => 'INT DEFAULT NULL',
             'tecnico_supervisor' => 'VARCHAR(100) DEFAULT NULL',
             'data_atendimento' => 'DATE DEFAULT NULL',
-            'solucao' => 'TEXT NULL'
+            'solucao' => 'TEXT NULL',
+            'pdf_path' => 'VARCHAR(255) DEFAULT NULL'
         ];
 
         foreach ($columns as $column => $definition) {
@@ -55,7 +56,8 @@ class ChamadoDAO
                 telefone_usuario,
                 tecnico_supervisor,
                 data_atendimento,
-                solucao
+                solucao,
+                pdf_path
             ) VALUES (
                 :equipamento_id,
                 :criado_por,
@@ -72,7 +74,8 @@ class ChamadoDAO
                 :telefone_usuario,
                 :tecnico_supervisor,
                 :data_atendimento,
-                :solucao
+                :solucao,
+                :pdf_path
             )";
 
         $stmt = $this->conn->prepare($sql);
@@ -93,6 +96,7 @@ class ChamadoDAO
         $stmt->bindValue(':tecnico_supervisor', $chamado->getTecnicoSupervisor());
         $stmt->bindValue(':data_atendimento', $chamado->getDataAtendimento() ?: null);
         $stmt->bindValue(':solucao', $chamado->getSolucao());
+        $stmt->bindValue(':pdf_path', $chamado->getPdfPath());
 
         $executed = $stmt->execute();
 
@@ -147,13 +151,14 @@ class ChamadoDAO
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function updateStatus($id, $status, $solucao = null)
+    public function updateStatus($id, $status, $solucao = null, $pdfPath = null)
     {
         if ($status === 'FINALIZADO') {
             $sql = "UPDATE chamados
                     SET status = :status,
                         solucao = :solucao,
-                        data_finalizacao = NOW()
+                        data_finalizacao = NOW(),
+                        pdf_path = :pdf_path
                     WHERE id = :id";
         } else {
             $sql = "UPDATE chamados
@@ -167,17 +172,17 @@ class ChamadoDAO
 
         if ($status === 'FINALIZADO') {
             $stmt->bindValue(':solucao', $solucao);
+            $stmt->bindValue(':pdf_path', $pdfPath);
         }
 
         return $stmt->execute();
     }
 
-    
-
-    public function delete($id)
+    public function updatePdfPath($id, $pdfPath)
     {
-        $sql = "DELETE FROM chamados WHERE id = :id";
+        $sql = "UPDATE chamados SET pdf_path = :pdf_path WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':pdf_path', $pdfPath);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }

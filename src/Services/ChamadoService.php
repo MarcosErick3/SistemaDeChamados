@@ -24,24 +24,19 @@ class ChamadoService
         return $this->dao->findById($id);
     }
 
-    public function iniciarAtendimento($id)
-    {
-        return $this->dao->updateStatus($id, 'EM ANDAMENTO');
-    }
-
     public function atualizarStatus($id, $status)
     {
         return $this->dao->updateStatus($id, $status);
     }
 
-    public function finalizar($id, $solucao)
+    public function finalizar($id, $solucao, $pdfPath = null)
     {
-        return $this->dao->updateStatus($id, 'FINALIZADO', $solucao);
+        return $this->dao->updateStatus($id, 'FINALIZADO', $solucao, $pdfPath);
     }
 
-    public function excluir($id)
+    public function atualizarPdfPath($id, $pdfPath)
     {
-        return $this->dao->delete($id);
+        return $this->dao->updatePdfPath($id, $pdfPath);
     }
 
     public function filtrar($status = null, $numeroSerie = null, $chamadoId = null)

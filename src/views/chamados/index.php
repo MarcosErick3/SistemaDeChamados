@@ -1,77 +1,29 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/index.css">
-    <title>ServiceDesk - Ordem de Serviço</title>
+    <link rel="stylesheet" href="css/index.css?v=2">
+    <title>ServiceDesk - Ordem de Servico</title>
 </head>
 
 <body>
 
-    <div class="topbar">
-        <div class="topbar-content">
-            <div class="topbar-logo">
-                <span class="logo-icon">📋</span>
-                <span class="logo-text">ServiceDesk</span>
-            </div>
-            <nav class="topbar-nav">
-                <a href="index.php?action=index" class="nav-item <?= (empty($_GET['meus_chamados']) && empty($_GET['historico'])) ? 'active' : '' ?>">
-                    <span class="nav-icon">🔍</span>
-                    <span>Pesquisa</span>
-                </a>
-                <a href="index.php?action=index&meus_chamados=1" class="nav-item <?= (!empty($_GET['meus_chamados'])) ? 'active' : '' ?>">
-                    <span class="nav-icon">📝</span>
-                    <span>Meus Chamados</span>
-                </a>
-                <a href="index.php?action=historico" class="nav-item <?= (isset($_GET['action']) && $_GET['action'] === 'historico') ? 'active' : '' ?>">
-                    <span class="nav-icon">📚</span>
-                    <span>Histórico</span>
-                </a>
-                <a href="index.php?action=perfil" class="nav-item <?= (isset($_GET['action']) && $_GET['action'] === 'perfil') ? 'active' : '' ?>">
-                    <span class="nav-icon">👤</span>
-                    <span>Perfil</span>
-                </a>
-            </nav>
-            <div class="topbar-user">
-                <?php if(isset($_SESSION['user'])): ?>
-                    <span class="user-badge">
-                        <span class="user-icon">👨‍💼</span>
-                        <span class="user-name"><?= htmlspecialchars($_SESSION['user']['nome']) ?></span>
-                    </span>
-                    <a href="index.php?action=logout" class="nav-item logout">
-                        <span class="nav-icon">🚪</span>
-                        <span>Sair</span>
-                    </a>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-    <div class="breadcrumb-bar">
-        <div class="breadcrumb">
-            <a href="index.php?action=index">📊 Início</a>
-            <?php if(!empty($_GET['meus_chamados'])): ?>
-                <span class="separator">/</span>
-                <span>Meus Chamados</span>
-            <?php else: ?>
-                <span class="separator">/</span>
-                <span>Ordem de Serviço</span>
-            <?php endif; ?>
-        </div>
-    </div>
+    <?php
+    $topbarActive = !empty($_GET['meus_chamados']) ? 'meus_chamados' : 'listar';
+    require __DIR__ . '/../partials/barra-superior.php';
+    ?>
 
     <div class="container">
         <h1 class="page-title">
-            ServiceDesk - Ordem de Serviço
-            <?php 
-                if (!empty($_GET['meus_chamados'])) {
-                    echo ' - Meus Chamados';
-                }
-            ?>
+            ServiceDesk - Ordem de Servico
+            <?php if (!empty($_GET['meus_chamados'])): ?>
+                <?= ' - Meus Chamados' ?>
+            <?php endif; ?>
         </h1>
 
-        <form method="POST" action="index.php?action=store">
+        <form method="POST" action="index.php?action=salvar">
             <div class="section">
                 <div class="section-title">Dados do Equipamento</div>
 
@@ -79,17 +31,17 @@
 
                 <div class="grid-2">
                     <div class="field">
-                        <label>Nº Série</label>
+                        <label>Numero Serie</label>
                         <input type="text" name="numero_serie" id="numero_serie" placeholder="Ex.: SN-2026-001" required>
                     </div>
 
                     <div class="field">
-                        <label>Nº Patrimônio</label>
+                        <label>Numero Patrimonio</label>
                         <input type="text" name="numero_patrimonio" id="numero_patrimonio" readonly>
                     </div>
 
                     <div class="field">
-                        <label>Descrição</label>
+                        <label>Descricao</label>
                         <input type="text" name="descricao_equipamento" id="descricao_equipamento" readonly>
                     </div>
 
@@ -123,26 +75,26 @@
             </div>
 
             <div class="section">
-                <div class="section-title">Ordem de Serviço</div>
+                <div class="section-title">Ordem de Servico</div>
                 <div class="grid-3">
                     <div class="field">
                         <label>Criado por</label>
-                        <input type="text" name="criado_por" value="<?= isset($_SESSION['user']) ? htmlspecialchars($_SESSION['user']['nome']) : 'Técnico' ?>" readonly>
+                        <input type="text" name="criado_por" value="<?= isset($_SESSION['user']) ? htmlspecialchars($_SESSION['user']['nome']) : 'Tecnico' ?>" readonly>
                     </div>
 
                     <div class="field">
                         <label>Status</label>
                         <select name="status">
-                            <option value="ABERTO">ABERTO</option>
-                            <option value="EM ANDAMENTO" selected>EM ANDAMENTO</option>
+                            <option value="ABERTO" selected>ABERTO</option>
+                            <option value="EM ANDAMENTO">EM ANDAMENTO</option>
                             <option value="FINALIZADO">FINALIZADO</option>
                         </select>
                     </div>
 
                     <div class="field">
-                        <label>Técnico Responsável</label>
+                        <label>Tecnico Responsavel</label>
                         <select name="tecnico_id" required>
-                            <option value="">Selecione o técnico</option>
+                            <option value="">Selecione o tecnico</option>
                             <?php foreach ($tecnicos as $tecnico): ?>
                                 <option value="<?= htmlspecialchars($tecnico['id']) ?>"><?= htmlspecialchars($tecnico['nome']) ?></option>
                             <?php endforeach; ?>
@@ -165,7 +117,7 @@
                         <select name="prioridade">
                             <option value="">Selecione</option>
                             <option value="Baixa">Baixa</option>
-                            <option value="Média">Média</option>
+                            <option value="Media">Media</option>
                             <option value="Alta">Alta</option>
                         </select>
                     </div>
@@ -181,14 +133,14 @@
                     </div>
 
                     <div class="field full">
-                        <label>Descrição do Problema</label>
+                        <label>Descricao do Problema</label>
                         <textarea name="descricao" required></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="section">
-                <div class="section-title">Dados do Usuário</div>
+                <div class="section-title">Dados do Usuario</div>
                 <div class="grid-2">
                     <div class="field">
                         <label>Nome</label>
@@ -202,24 +154,23 @@
 
                     <div class="field">
                         <label>DDD</label>
-                        <input type="text" name="ddd_usuario">
+                        <input type="text" name="ddd_usuario" inputmode="numeric" maxlength="5" placeholder="Ex.: 11">
                     </div>
 
                     <div class="field">
                         <label>Telefone</label>
-                        <input type="text" name="telefone_usuario">
+                        <input type="text" name="telefone_usuario" inputmode="numeric" maxlength="20" placeholder="Ex.: 999999999">
                     </div>
                 </div>
             </div>
 
             <div class="section">
-                <div class="section-title">Informações de Tratamento</div>
+                <div class="section-title">Informacoes de Tratamento</div>
                 <div class="grid-2">
                     <div class="field full">
-                        <label>Solução</label>
+                        <label>Solucao</label>
                         <textarea name="solucao"></textarea>
                     </div>
-                       
                 </div>
 
                 <div class="actions">
@@ -234,6 +185,7 @@
             </div>
         <?php endif; ?>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const numeroSerieInput = document.getElementById('numero_serie');
@@ -246,7 +198,7 @@
             const cidadeInput = document.getElementById('cidade');
             const ufInput = document.getElementById('uf');
             const mensagemEquipamento = document.getElementById('mensagemEquipamento');
-            const formChamado = document.querySelector('form[action="index.php?action=store"]');
+            const formChamado = document.querySelector('form[action="index.php?action=salvar"]');
 
             function limparCamposEquipamento() {
                 equipamentoIdInput.value = '';
@@ -272,8 +224,6 @@
                 try {
                     const response = await fetch('index.php?action=buscarEquipamento&numero_serie=' + encodeURIComponent(numeroSerie));
                     const data = await response.json();
-
-                    console.log('Retorno da busca:', data);
 
                     if (!data.success) {
                         mensagemEquipamento.textContent = data.message;
@@ -301,11 +251,9 @@
             numeroSerieInput.addEventListener('blur', buscarEquipamento);
 
             formChamado.addEventListener('submit', function(event) {
-                console.log('equipamento_id antes de enviar:', equipamentoIdInput.value);
-
                 if (!equipamentoIdInput.value) {
                     event.preventDefault();
-                    alert('Informe um número de série válido antes de salvar o chamado.');
+                    alert('Informe um numero de serie valido antes de salvar o chamado.');
                     numeroSerieInput.focus();
                 }
             });
