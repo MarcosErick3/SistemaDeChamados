@@ -26,12 +26,14 @@ $conn = $database->connect();
 $chamadoDao = new ChamadoDAO($conn);
 $equipamentoDao = new EquipamentoDAO($conn);
 $tecnicoDao = new TecnicoDAO($conn);
+$chamadoFinalizacaoDao = new ChamadoFinalizacaoDAO($conn);
 
 $service = new ChamadoService($chamadoDao);
 $tecnicoService = new TecnicoService($tecnicoDao);
 $pdfService = new PdfService();
+$chamadoFinalizacaoService = new ChamadoFinalizacaoService($chamadoFinalizacaoDao);
 
-$chamadoController = new ChamadoController($service, $tecnicoService, $pdfService);
+$chamadoController = new ChamadoController($service, $tecnicoService, $pdfService, $chamadoFinalizacaoService);
 $equipamentoController = new EquipamentoController($equipamentoDao);
 $loginController = new LoginController($tecnicoDao);
 
@@ -78,6 +80,10 @@ switch ($action) {
     case 'detalhes':
     case 'show':
         $chamadoController->detalhes();
+        break;
+
+    case 'deletar':
+        $chamadoController->deletar();
         break;
 
     case 'atualizar':

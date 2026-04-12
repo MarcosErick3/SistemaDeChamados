@@ -1,6 +1,6 @@
 <?php
 
-class IniciarChamadoCommand implements Command
+class DeletarChamadoCommand implements Command
 {
     private $service;
     private $id;
@@ -13,6 +13,6 @@ class IniciarChamadoCommand implements Command
 
     public function execute()
     {
-        return $this->service->iniciar($this->id);
+        return $this->service->deletar($this->id);
     }
 }

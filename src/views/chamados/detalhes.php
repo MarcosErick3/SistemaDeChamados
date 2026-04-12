@@ -1,130 +1,126 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<?php
+$topbarActive = 'historico';
+$topbarUser = $_SESSION['user'] ?? null;
+$pageTitle = 'ServiceDesk - Chamado #' . str_pad($chamado['id'] ?? 0, 5, '0', STR_PAD_LEFT);
+ob_start();
+?>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/index.css?v=2">
-    <title>ServiceDesk - Chamado #<?= str_pad($chamado['id'] ?? 0, 5, '0', STR_PAD_LEFT) ?></title>
-</head>
+<div class="container">
+    <h1 class="page-title">Chamado #<?= str_pad($chamado['id'] ?? 0, 5, '0', STR_PAD_LEFT) ?></h1>
 
-<body>
-    <?php
-    $topbarActive = 'historico';
-    require __DIR__ . '/../partials/barra-superior.php';
-    ?>
+    <div class="section">
+        <div class="section-title">Detalhes do Chamado</div>
+        <form method="POST" action="index.php?action=atualizar" enctype="multipart/form-data">
+            <input type="hidden" name="id" value="<?= $chamado['id'] ?>">
+            <div class="grid-2">
+                <div class="field">
+                    <label>ID</label>
+                    <input type="text" readonly value="#<?= str_pad($chamado['id'] ?? 0, 5, '0', STR_PAD_LEFT) ?>">
+                </div>
+                <div class="field">
+                    <label>Status</label>
+                    <select name="status" onchange="alternarSolucao()">
+                        <option value="ABERTO" <?= ($chamado['status'] === 'ABERTO') ? 'selected' : '' ?>>ABERTO</option>
+                        <option value="EM ANDAMENTO" <?= ($chamado['status'] === 'EM ANDAMENTO') ? 'selected' : '' ?>>EM ANDAMENTO</option>
+                        <option value="FINALIZADO" <?= ($chamado['status'] === 'FINALIZADO') ? 'selected' : '' ?>>FINALIZADO</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Tecnico</label>
+                    <input type="text" readonly value="<?= htmlspecialchars($chamado['tecnico_nome'] ?? $chamado['tecnico'] ?? '') ?>">
+                </div>
+                <div class="field">
+                    <label>Prioridade</label>
+                    <input type="text" readonly value="<?= htmlspecialchars($chamado['prioridade'] ?? '') ?>">
+                </div>
+                <div class="field">
+                    <label>Numero Serie</label>
+                    <input type="text" readonly value="<?= htmlspecialchars($chamado['numero_serie'] ?? '') ?>">
+                </div>
+                <div class="field">
+                    <label>Equipamento</label>
+                    <input type="text" readonly value="<?= htmlspecialchars($chamado['equipamento'] ?? '') ?>">
+                </div>
+                <div class="field">
+                    <label>Local</label>
+                    <input type="text" readonly value="<?= htmlspecialchars($chamado['local'] ?? '') ?>">
+                </div>
+                <div class="field">
+                    <label>Unidade</label>
+                    <input type="text" readonly value="<?= htmlspecialchars($chamado['unidade'] ?? '') ?>">
+                </div>
+                <div class="field">
+                    <label>Criado em</label>
+                    <input type="text" readonly value="<?= isset($chamado['data_abertura']) ? date('d/m/Y H:i', strtotime($chamado['data_abertura'])) : 'N/A' ?>">
+                </div>
+                <div class="field">
+                    <label>Finalizado em</label>
+                    <input type="text" readonly value="<?= isset($chamado['data_finalizacao']) ? date('d/m/Y H:i', strtotime($chamado['data_finalizacao'])) : 'N/A' ?>">
+                </div>
+            </div>
 
-    <div class="container">
-        <h1 class="page-title">Chamado #<?= str_pad($chamado['id'] ?? 0, 5, '0', STR_PAD_LEFT) ?></h1>
+            <div class="section">
+                <div class="section-title">Informacoes do Chamado</div>
+                <div class="field full">
+                    <label>Assunto</label>
+                    <input type="text" readonly value="<?= htmlspecialchars($chamado['assunto'] ?? '') ?>">
+                </div>
+                <div class="field full">
+                    <label>Descricao</label>
+                    <textarea readonly><?= htmlspecialchars($chamado['descricao'] ?? '') ?></textarea>
+                </div>
+                <div class="field full" id="solucao-field" style="display: none;">
+                    <label>Solucao</label>
+                    <textarea name="solucao"><?= htmlspecialchars($chamado['solucao'] ?? '') ?></textarea>
+                </div>
+                <div class="field full" id="pdf-field" style="display: none;">
+                    <label>Anexar PDF preenchido</label>
+                    <input type="file" name="pdf" accept=".pdf">
+                </div>
+                <div class="field full" id="solucao-view">
+                    <label>Solucao</label>
+                    <textarea readonly><?= htmlspecialchars($chamado['solucao'] ?? '') ?></textarea>
+                </div>
+            </div>
 
-        <div class="section">
-            <div class="section-title">Detalhes do Chamado</div>
-            <form method="POST" action="index.php?action=atualizar" enctype="multipart/form-data">
-                <input type="hidden" name="id" value="<?= $chamado['id'] ?>">
+            <div class="section">
+                <div class="section-title">Dados do Usuario</div>
                 <div class="grid-2">
                     <div class="field">
-                        <label>ID</label>
-                        <input type="text" readonly value="#<?= str_pad($chamado['id'] ?? 0, 5, '0', STR_PAD_LEFT) ?>">
+                        <label>Nome</label>
+                        <input type="text" readonly value="<?= htmlspecialchars($chamado['nome_usuario'] ?? '') ?>">
                     </div>
                     <div class="field">
-                        <label>Status</label>
-                        <select name="status" onchange="alternarSolucao()">
-                            <option value="ABERTO" <?= ($chamado['status'] === 'ABERTO') ? 'selected' : '' ?>>ABERTO</option>
-                            <option value="EM ANDAMENTO" <?= ($chamado['status'] === 'EM ANDAMENTO') ? 'selected' : '' ?>>EM ANDAMENTO</option>
-                            <option value="FINALIZADO" <?= ($chamado['status'] === 'FINALIZADO') ? 'selected' : '' ?>>FINALIZADO</option>
-                        </select>
+                        <label>E-mail</label>
+                        <input type="text" readonly value="<?= htmlspecialchars($chamado['email_usuario'] ?? '') ?>">
                     </div>
                     <div class="field">
-                        <label>Tecnico</label>
-                        <input type="text" readonly value="<?= htmlspecialchars($chamado['tecnico_nome'] ?? $chamado['tecnico'] ?? '') ?>">
+                        <label>DDD</label>
+                        <input type="text" readonly value="<?= htmlspecialchars($chamado['ddd_usuario'] ?? '') ?>">
                     </div>
                     <div class="field">
-                        <label>Prioridade</label>
-                        <input type="text" readonly value="<?= htmlspecialchars($chamado['prioridade'] ?? '') ?>">
-                    </div>
-                    <div class="field">
-                        <label>Numero Serie</label>
-                        <input type="text" readonly value="<?= htmlspecialchars($chamado['numero_serie'] ?? '') ?>">
-                    </div>
-                    <div class="field">
-                        <label>Equipamento</label>
-                        <input type="text" readonly value="<?= htmlspecialchars($chamado['equipamento'] ?? '') ?>">
-                    </div>
-                    <div class="field">
-                        <label>Local</label>
-                        <input type="text" readonly value="<?= htmlspecialchars($chamado['local'] ?? '') ?>">
-                    </div>
-                    <div class="field">
-                        <label>Unidade</label>
-                        <input type="text" readonly value="<?= htmlspecialchars($chamado['unidade'] ?? '') ?>">
-                    </div>
-                    <div class="field">
-                        <label>Criado em</label>
-                        <input type="text" readonly value="<?= isset($chamado['data_abertura']) ? date('d/m/Y H:i', strtotime($chamado['data_abertura'])) : 'N/A' ?>">
-                    </div>
-                    <div class="field">
-                        <label>Finalizado em</label>
-                        <input type="text" readonly value="<?= isset($chamado['data_finalizacao']) ? date('d/m/Y H:i', strtotime($chamado['data_finalizacao'])) : 'N/A' ?>">
+                        <label>Telefone</label>
+                        <input type="text" readonly value="<?= htmlspecialchars($chamado['telefone_usuario'] ?? '') ?>">
                     </div>
                 </div>
+            </div>
 
-                <div class="section">
-                    <div class="section-title">Informacoes do Chamado</div>
-                    <div class="field full">
-                        <label>Assunto</label>
-                        <input type="text" readonly value="<?= htmlspecialchars($chamado['assunto'] ?? '') ?>">
-                    </div>
-                    <div class="field full">
-                        <label>Descricao</label>
-                        <textarea readonly><?= htmlspecialchars($chamado['descricao'] ?? '') ?></textarea>
-                    </div>
-                    <div class="field full" id="solucao-field" style="display: none;">
-                        <label>Solucao</label>
-                        <textarea name="solucao"><?= htmlspecialchars($chamado['solucao'] ?? '') ?></textarea>
-                    </div>
-                    <div class="field full" id="pdf-field" style="display: none;">
-                        <label>Anexar PDF preenchido</label>
-                        <input type="file" name="pdf" accept=".pdf">
-                    </div>
-                    <div class="field full" id="solucao-view">
-                        <label>Solucao</label>
-                        <textarea readonly><?= htmlspecialchars($chamado['solucao'] ?? '') ?></textarea>
-                    </div>
-                </div>
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a href="index.php?action=historico" class="btn btn-secondary">Voltar</a>
+                <?php if (!empty($chamado['pdf_path'])): ?>
+                    <a href="<?= htmlspecialchars($chamado['pdf_path']) ?>" class="btn btn-info" target="_blank">Baixar PDF</a>
+                <?php endif; ?>
+            </div>
+        </form>
 
-                <div class="section">
-                    <div class="section-title">Dados do Usuario</div>
-                    <div class="grid-2">
-                        <div class="field">
-                            <label>Nome</label>
-                            <input type="text" readonly value="<?= htmlspecialchars($chamado['nome_usuario'] ?? '') ?>">
-                        </div>
-                        <div class="field">
-                            <label>E-mail</label>
-                            <input type="text" readonly value="<?= htmlspecialchars($chamado['email_usuario'] ?? '') ?>">
-                        </div>
-                        <div class="field">
-                            <label>DDD</label>
-                            <input type="text" readonly value="<?= htmlspecialchars($chamado['ddd_usuario'] ?? '') ?>">
-                        </div>
-                        <div class="field">
-                            <label>Telefone</label>
-                            <input type="text" readonly value="<?= htmlspecialchars($chamado['telefone_usuario'] ?? '') ?>">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="actions">
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                    <a href="index.php?action=historico" class="btn btn-secondary">Voltar</a>
-                    <?php if (!empty($chamado['pdf_path'])): ?>
-                        <a href="<?= htmlspecialchars($chamado['pdf_path']) ?>" class="btn btn-info" target="_blank">Baixar PDF</a>
-                    <?php endif; ?>
-                </div>
-            </form>
-        </div>
+        <form method="GET" action="index.php" onsubmit="return confirm('Deseja realmente excluir este chamado?');" style="margin-top: 20px;">
+            <input type="hidden" name="action" value="deletar">
+            <input type="hidden" name="id" value="<?= $chamado['id'] ?>">
+            <button type="submit" class="btn btn-danger">Excluir Chamado</button>
+        </form>
     </div>
-</body>
+</div>
 
 <script>
     function alternarSolucao() {
@@ -147,4 +143,6 @@
     alternarSolucao();
 </script>
 
-</html>
+<?php
+$content = ob_get_clean();
+require __DIR__ . '/../layout.php';

@@ -5,12 +5,14 @@ class ChamadoController
     private $service;
     private $tecnicoService;
     private $pdfService;
+    private $finalizacaoService;
 
-    public function __construct(ChamadoService $service, TecnicoService $tecnicoService, ?PdfService $pdfService = null)
+    public function __construct(ChamadoService $service, TecnicoService $tecnicoService, ?PdfService $pdfService = null, ChamadoFinalizacaoService $finalizacaoService)
     {
         $this->service = $service;
         $this->tecnicoService = $tecnicoService;
         $this->pdfService = $pdfService;
+        $this->finalizacaoService = $finalizacaoService;
     }
 
     public function listar()
@@ -82,8 +84,16 @@ class ChamadoController
 
         $chamado = $this->montarChamadoDaRequisicao($equipamentoId, $tecnicoId, $tecnico['nome']);
 
-        $command = new CriarChamadoCommand($this->service, $chamado, $this->pdfService);
+        $command = CommandFactory::createCriarChamadoCommand($this->service, $chamado, $this->pdfService);
         $createdId = $command->execute();
+
+        if ($chamado->getStatus() === 'FINALIZADO') {
+            $finalizacao = new ChamadoFinalizacao();
+            $finalizacao->setChamadoId($createdId);
+            $finalizacao->setSolucao($_POST['solucao'] ?? null);
+            $finalizacao->setPdfPath(null);
+            $this->finalizacaoService->salvar($finalizacao);
+        }
 
         $numeroChamado = str_pad($createdId, 5, '0', STR_PAD_LEFT);
         header('Location: index.php?action=listar&created=1&chamado_numero=' . urlencode($numeroChamado));
@@ -117,9 +127,17 @@ class ChamadoController
                 $pdfPath = $uploadedPdfPath;
             }
 
-            $this->service->finalizar($id, $solucao, $pdfPath);
+            $command = CommandFactory::createFinalizarChamadoCommand($this->service, $id, $solucao, $pdfPath);
+            $command->execute();
+
+            $finalizacao = new ChamadoFinalizacao();
+            $finalizacao->setChamadoId($id);
+            $finalizacao->setSolucao($solucao);
+            $finalizacao->setPdfPath($pdfPath);
+            $this->finalizacaoService->salvar($finalizacao);
         } elseif ($status) {
-            $this->service->atualizarStatus($id, $status);
+            $command = CommandFactory::createAtualizarStatusCommand($this->service, $id, $status);
+            $command->execute();
         }
 
         header('Location: index.php?action=detalhes&id=' . $id);
@@ -129,6 +147,23 @@ class ChamadoController
     public function update()
     {
         $this->atualizar();
+    }
+
+    public function deletar()
+    {
+        $id = $_GET['id'] ?? null;
+
+        if (empty($id) || !is_numeric($id)) {
+            header('Location: index.php?action=historico');
+            exit;
+        }
+
+        $id = (int) $id;
+        $command = CommandFactory::createDeletarChamadoCommand($this->service, $id);
+        $command->execute();
+
+        header('Location: index.php?action=historico&deleted=1');
+        exit;
     }
 
     public function historico()
@@ -196,7 +231,6 @@ class ChamadoController
             ->telefoneUsuario($_POST['telefone_usuario'] ?? null)
             ->tecnicoSupervisor($_POST['tecnico_supervisor'] ?? null)
             ->dataAtendimento($_POST['data_atendimento'] ?? null)
-            ->solucao($_POST['solucao'] ?? null)
             ->build();
     }
 

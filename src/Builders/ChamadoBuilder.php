@@ -125,21 +125,10 @@ class ChamadoBuilder
         $this->chamado->setDataAtendimento($valor);
         return $this;
     }
-    public function solucao($valor)
-    {
-        $this->chamado->setSolucao($valor);
-        return $this;
-    }
 
     public function equipamentoId($valor)
-{
-    $this->chamado->setEquipamentoId($valor);
-    return $this;
-}
-
-    public function pdfPath($valor)
     {
-        $this->chamado->setPdfPath($valor);
+        $this->chamado->setEquipamentoId($valor);
         return $this;
     }
 

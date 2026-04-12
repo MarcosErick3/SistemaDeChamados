@@ -19,7 +19,8 @@ class ChamadoDAO
             'tecnico_supervisor' => 'VARCHAR(100) DEFAULT NULL',
             'data_atendimento' => 'DATE DEFAULT NULL',
             'solucao' => 'TEXT NULL',
-            'pdf_path' => 'VARCHAR(255) DEFAULT NULL'
+            'pdf_path' => 'VARCHAR(255) DEFAULT NULL',
+            'data_finalizacao' => 'DATETIME DEFAULT NULL'
         ];
 
         foreach ($columns as $column => $definition) {
@@ -36,9 +37,21 @@ class ChamadoDAO
                 $this->conn->exec("ALTER TABLE chamados ADD COLUMN {$column} {$definition}");
             }
         }
+
+        $stmt = $this->conn->prepare(
+            'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = :schema AND table_name = :table'
+        );
+        $stmt->execute([
+            ':schema' => $dbName,
+            ':table' => 'chamado_detalhes'
+        ]);
+
+        if ((int) $stmt->fetchColumn() > 0) {
+            $this->conn->exec('DROP TABLE chamado_detalhes');
+        }
     }
 
-    public function create(Chamado $chamado)
+    public function criarChamado(Chamado $chamado)
     {
         $sql = "INSERT INTO chamados (
                 equipamento_id,
@@ -55,9 +68,7 @@ class ChamadoDAO
                 ddd_usuario,
                 telefone_usuario,
                 tecnico_supervisor,
-                data_atendimento,
-                solucao,
-                pdf_path
+                data_atendimento
             ) VALUES (
                 :equipamento_id,
                 :criado_por,
@@ -73,9 +84,7 @@ class ChamadoDAO
                 :ddd_usuario,
                 :telefone_usuario,
                 :tecnico_supervisor,
-                :data_atendimento,
-                :solucao,
-                :pdf_path
+                :data_atendimento
             )";
 
         $stmt = $this->conn->prepare($sql);
@@ -95,8 +104,6 @@ class ChamadoDAO
         $stmt->bindValue(':telefone_usuario', $chamado->getTelefoneUsuario());
         $stmt->bindValue(':tecnico_supervisor', $chamado->getTecnicoSupervisor());
         $stmt->bindValue(':data_atendimento', $chamado->getDataAtendimento() ?: null);
-        $stmt->bindValue(':solucao', $chamado->getSolucao());
-        $stmt->bindValue(':pdf_path', $chamado->getPdfPath());
 
         $executed = $stmt->execute();
 
@@ -107,10 +114,13 @@ class ChamadoDAO
         return 0;
     }
 
-    public function findAll()
+    public function listarTudo()
     {
         $sql = "SELECT 
                 c.*,
+                COALESCE(f.solucao, c.solucao) AS solucao,
+                COALESCE(f.pdf_path, c.pdf_path) AS pdf_path,
+                COALESCE(f.data_finalizacao, c.data_finalizacao) AS data_finalizacao,
                 e.numero_serie,
                 e.numero_patrimonio,
                 e.descricao AS descricao_equipamento,
@@ -123,6 +133,7 @@ class ChamadoDAO
             FROM chamados c
             INNER JOIN equipamentos e ON e.id = c.equipamento_id
             LEFT JOIN tecnicos t ON t.id = c.tecnico_id
+            LEFT JOIN chamado_finalizacoes f ON f.chamado_id = c.id
             ORDER BY c.id DESC";
 
         return $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
@@ -131,6 +142,9 @@ class ChamadoDAO
     {
         $sql = "SELECT 
                 c.*,
+                COALESCE(f.solucao, c.solucao) AS solucao,
+                COALESCE(f.pdf_path, c.pdf_path) AS pdf_path,
+                COALESCE(f.data_finalizacao, c.data_finalizacao) AS data_finalizacao,
                 e.numero_serie,
                 e.numero_patrimonio,
                 e.descricao AS descricao_equipamento,
@@ -143,6 +157,7 @@ class ChamadoDAO
             FROM chamados c
             INNER JOIN equipamentos e ON e.id = c.equipamento_id
             LEFT JOIN tecnicos t ON t.id = c.tecnico_id
+            LEFT JOIN chamado_finalizacoes f ON f.chamado_id = c.id
             WHERE c.id = :id";
 
         $stmt = $this->conn->prepare($sql);
@@ -155,10 +170,7 @@ class ChamadoDAO
     {
         if ($status === 'FINALIZADO') {
             $sql = "UPDATE chamados
-                    SET status = :status,
-                        solucao = :solucao,
-                        data_finalizacao = NOW(),
-                        pdf_path = :pdf_path
+                    SET status = :status
                     WHERE id = :id";
         } else {
             $sql = "UPDATE chamados
@@ -169,11 +181,6 @@ class ChamadoDAO
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue(':status', $status);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-
-        if ($status === 'FINALIZADO') {
-            $stmt->bindValue(':solucao', $solucao);
-            $stmt->bindValue(':pdf_path', $pdfPath);
-        }
 
         return $stmt->execute();
     }
@@ -187,10 +194,21 @@ class ChamadoDAO
         return $stmt->execute();
     }
 
+    public function delete($id)
+    {
+        $sql = "DELETE FROM chamados WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
     public function filtrar($status = null, $numeroSerie = null, $chamadoId = null)
     {
         $sql = "SELECT 
                 c.*,
+                COALESCE(f.solucao, c.solucao) AS solucao,
+                COALESCE(f.pdf_path, c.pdf_path) AS pdf_path,
+                COALESCE(f.data_finalizacao, c.data_finalizacao) AS data_finalizacao,
                 e.numero_serie,
                 e.numero_patrimonio,
                 e.descricao AS descricao_equipamento,
@@ -201,6 +219,7 @@ class ChamadoDAO
                 e.uf
             FROM chamados c
             INNER JOIN equipamentos e ON e.id = c.equipamento_id
+            LEFT JOIN chamado_finalizacoes f ON f.chamado_id = c.id
             WHERE 1=1";
 
         $params = [];
@@ -236,6 +255,9 @@ class ChamadoDAO
     {
         $sql = "SELECT 
                 c.*,
+                COALESCE(f.solucao, c.solucao) AS solucao,
+                COALESCE(f.pdf_path, c.pdf_path) AS pdf_path,
+                COALESCE(f.data_finalizacao, c.data_finalizacao) AS data_finalizacao,
                 e.numero_serie,
                 e.numero_patrimonio,
                 e.descricao AS descricao_equipamento,
@@ -248,6 +270,7 @@ class ChamadoDAO
             FROM chamados c
             INNER JOIN equipamentos e ON e.id = c.equipamento_id
             LEFT JOIN tecnicos t ON t.id = c.tecnico_id
+            LEFT JOIN chamado_finalizacoes f ON f.chamado_id = c.id
             WHERE c.tecnico_id = :tecnico_id
             ORDER BY c.id DESC";
 
@@ -261,6 +284,9 @@ class ChamadoDAO
     {
         $sql = "SELECT 
                 c.*,
+                COALESCE(f.solucao, c.solucao) AS solucao,
+                COALESCE(f.pdf_path, c.pdf_path) AS pdf_path,
+                COALESCE(f.data_finalizacao, c.data_finalizacao) AS data_finalizacao,
                 e.numero_serie,
                 e.numero_patrimonio,
                 e.descricao AS descricao_equipamento,
@@ -273,7 +299,8 @@ class ChamadoDAO
             FROM chamados c
             INNER JOIN equipamentos e ON e.id = c.equipamento_id
             LEFT JOIN tecnicos t ON t.id = c.tecnico_id
-            ORDER BY c.data_finalizacao DESC, c.id DESC";
+            LEFT JOIN chamado_finalizacoes f ON f.chamado_id = c.id
+            ORDER BY f.data_finalizacao DESC, c.id DESC";
 
         return $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -282,6 +309,9 @@ class ChamadoDAO
     {
         $sql = "SELECT 
                 c.*,
+                COALESCE(f.solucao, c.solucao) AS solucao,
+                COALESCE(f.pdf_path, c.pdf_path) AS pdf_path,
+                COALESCE(f.data_finalizacao, c.data_finalizacao) AS data_finalizacao,
                 e.numero_serie,
                 e.numero_patrimonio,
                 e.descricao AS descricao_equipamento,
@@ -294,6 +324,7 @@ class ChamadoDAO
             FROM chamados c
             INNER JOIN equipamentos e ON e.id = c.equipamento_id
             LEFT JOIN tecnicos t ON t.id = c.tecnico_id
+            LEFT JOIN chamado_finalizacoes f ON f.chamado_id = c.id
             WHERE 1=1";
 
         $params = [];
@@ -318,7 +349,7 @@ class ChamadoDAO
             $params[':numero_serie'] = "%{$numeroSerie}%";
         }
 
-        $sql .= " ORDER BY c.data_finalizacao DESC, c.id DESC";
+        $sql .= " ORDER BY f.data_finalizacao DESC, c.id DESC";
 
         $stmt = $this->conn->prepare($sql);
 

@@ -11,12 +11,12 @@ class ChamadoService
 
     public function criar(Chamado $chamado)
     {
-        return $this->dao->create($chamado);
+        return $this->dao->criarChamado($chamado);
     }
 
     public function listar()
     {
-        return $this->dao->findAll();
+        return $this->dao->listarTudo();
     }
 
     public function buscarPorId($id)
@@ -29,9 +29,24 @@ class ChamadoService
         return $this->dao->updateStatus($id, $status);
     }
 
+    public function iniciar($id)
+    {
+        return $this->dao->updateStatus($id, 'EM ANDAMENTO');
+    }
+
+    public function iniciarAtendimento($id)
+    {
+        return $this->iniciar($id);
+    }
+
     public function finalizar($id, $solucao, $pdfPath = null)
     {
         return $this->dao->updateStatus($id, 'FINALIZADO', $solucao, $pdfPath);
+    }
+
+    public function deletar($id)
+    {
+        return $this->dao->delete($id);
     }
 
     public function atualizarPdfPath($id, $pdfPath)

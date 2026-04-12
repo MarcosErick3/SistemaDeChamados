@@ -11,7 +11,6 @@ class TecnicoDAO
 
     public function create(Tecnico $tecnico)
     {
-        // Verificar se já existe um técnico com o mesmo email
         $sqlCheck = "SELECT COUNT(*) FROM tecnicos WHERE email = :email";
         $stmtCheck = $this->conn->prepare($sqlCheck);
         $stmtCheck->bindValue(':email', $tecnico->getEmail());
