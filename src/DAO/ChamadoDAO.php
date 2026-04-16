@@ -38,17 +38,6 @@ class ChamadoDAO
             }
         }
 
-        $stmt = $this->conn->prepare(
-            'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = :schema AND table_name = :table'
-        );
-        $stmt->execute([
-            ':schema' => $dbName,
-            ':table' => 'chamado_detalhes'
-        ]);
-
-        if ((int) $stmt->fetchColumn() > 0) {
-            $this->conn->exec('DROP TABLE chamado_detalhes');
-        }
     }
 
     public function criarChamado(Chamado $chamado)
@@ -247,35 +236,6 @@ class ChamadoDAO
             $stmt->bindValue($key, $value);
         }
 
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function filtrarPorTecnico($tecnicoId)
-    {
-        $sql = "SELECT 
-                c.*,
-                COALESCE(f.solucao, c.solucao) AS solucao,
-                COALESCE(f.pdf_path, c.pdf_path) AS pdf_path,
-                COALESCE(f.data_finalizacao, c.data_finalizacao) AS data_finalizacao,
-                e.numero_serie,
-                e.numero_patrimonio,
-                e.descricao AS descricao_equipamento,
-                e.equipamento,
-                e.unidade,
-                e.local,
-                e.cidade,
-                e.uf,
-                t.nome AS tecnico_nome
-            FROM chamados c
-            INNER JOIN equipamentos e ON e.id = c.equipamento_id
-            LEFT JOIN tecnicos t ON t.id = c.tecnico_id
-            LEFT JOIN chamado_finalizacoes f ON f.chamado_id = c.id
-            WHERE c.tecnico_id = :tecnico_id
-            ORDER BY c.id DESC";
-
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue(':tecnico_id', $tecnicoId, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

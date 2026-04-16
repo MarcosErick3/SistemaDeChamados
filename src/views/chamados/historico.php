@@ -2,6 +2,7 @@
 $topbarActive = 'historico';
 $topbarUser = $_SESSION['user'] ?? null;
 $pageTitle = 'ServiceDesk - Historico';
+$pageStyles = ['css/chamados.css?v=1'];
 ob_start();
 ?>
 
@@ -9,7 +10,7 @@ ob_start();
     <h1 class="page-title">ServiceDesk - Historico de Chamados</h1>
 
     <?php if (!empty($_GET['deleted'])): ?>
-        <div class="alert alert-success" style="margin-bottom: 20px;">
+        <div class="alert alert-success alert-space-bottom">
             Chamado exclu&iacute;do com sucesso.
         </div>
     <?php endif; ?>
@@ -57,8 +58,8 @@ ob_start();
 
     <div class="section">
         <div class="section-title">Historico de Chamados</div>
-        <div class="table-wrapper">
-            <table>
+        <div class="table-responsive">
+            <table class="table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -85,18 +86,18 @@ ob_start();
                                 <td><?= htmlspecialchars($chamado['local'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($chamado['tecnico_nome'] ?? $chamado['tecnico'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($chamado['prioridade'] ?? '') ?></td>
-                                <td><?php $abertura = strtotime($chamado['data_abertura'] ?? ''); echo $abertura ? date('d/m/Y H:i', $abertura) : 'N/A'; ?></td>
+                                <td><?php $abertura = strtotime($chamado['data_abertura'] ?? $chamado['data_criacao'] ?? ''); echo $abertura ? date('d/m/Y H:i', $abertura) : 'N/A'; ?></td>
                                 <td><?php $finalizacao = strtotime($chamado['data_finalizacao'] ?? ''); echo $finalizacao ? date('d/m/Y H:i', $finalizacao) : 'N/A'; ?></td>
                                 <td><?= htmlspecialchars(substr($chamado['solucao'] ?? '', 0, 50)) . (strlen($chamado['solucao'] ?? '') > 50 ? '...' : '') ?></td>
                                 <td>
-                                    <a href="index.php?action=detalhes&id=<?= $chamado['id'] ?>" class="btn btn-secondary" style="margin-right: 8px;">Ver</a>
+                                    <a href="index.php?action=detalhes&id=<?= $chamado['id'] ?>" class="btn btn-secondary btn-inline-gap">Ver</a>
                                     <a href="index.php?action=deletar&id=<?= $chamado['id'] ?>" class="btn btn-danger" onclick="return confirm('Deseja realmente excluir este chamado?');">Excluir</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="9" style="text-align: center; padding: 20px;">Nenhum chamado encontrado.</td>
+                            <td colspan="9" class="table-empty-cell">Nenhum chamado encontrado.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

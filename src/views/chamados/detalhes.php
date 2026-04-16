@@ -2,6 +2,8 @@
 $topbarActive = 'historico';
 $topbarUser = $_SESSION['user'] ?? null;
 $pageTitle = 'ServiceDesk - Chamado #' . str_pad($chamado['id'] ?? 0, 5, '0', STR_PAD_LEFT);
+$pageStyles = ['css/chamados.css?v=1'];
+$dataAbertura = $chamado['data_abertura'] ?? $chamado['data_criacao'] ?? null;
 ob_start();
 ?>
 
@@ -51,7 +53,7 @@ ob_start();
                 </div>
                 <div class="field">
                     <label>Criado em</label>
-                    <input type="text" readonly value="<?= isset($chamado['data_abertura']) ? date('d/m/Y H:i', strtotime($chamado['data_abertura'])) : 'N/A' ?>">
+                    <input type="text" readonly value="<?= $dataAbertura ? date('d/m/Y H:i', strtotime($dataAbertura)) : 'N/A' ?>">
                 </div>
                 <div class="field">
                     <label>Finalizado em</label>
@@ -69,11 +71,11 @@ ob_start();
                     <label>Descricao</label>
                     <textarea readonly><?= htmlspecialchars($chamado['descricao'] ?? '') ?></textarea>
                 </div>
-                <div class="field full" id="solucao-field" style="display: none;">
+                <div class="field full is-hidden" id="solucao-field">
                     <label>Solucao</label>
                     <textarea name="solucao"><?= htmlspecialchars($chamado['solucao'] ?? '') ?></textarea>
                 </div>
-                <div class="field full" id="pdf-field" style="display: none;">
+                <div class="field full is-hidden" id="pdf-field">
                     <label>Anexar PDF preenchido</label>
                     <input type="file" name="pdf" accept=".pdf">
                 </div>
@@ -114,11 +116,46 @@ ob_start();
             </div>
         </form>
 
-        <form method="GET" action="index.php" onsubmit="return confirm('Deseja realmente excluir este chamado?');" style="margin-top: 20px;">
-            <input type="hidden" name="action" value="deletar">
-            <input type="hidden" name="id" value="<?= $chamado['id'] ?>">
-            <button type="submit" class="btn btn-danger">Excluir Chamado</button>
+        <a href="index.php?action=deletar&id=<?= $chamado['id'] ?>" class="btn btn-danger details-delete-link" onclick="return confirm('Deseja realmente excluir este chamado?');">Excluir Chamado</a>
+    </div>
+
+    <!-- Seção de Comentários -->
+    <div class="section">
+        <div class="section-title">Comentários</div>
+
+        <!-- Formulário para adicionar comentário -->
+        <form method="POST" action="index.php?action=adicionarComentario" class="details-comment-form">
+            <input type="hidden" name="chamado_id" value="<?= $chamado['id'] ?>">
+            <div class="field">
+                <label for="comentario">Novo Comentário</label>
+                <textarea name="comentario" id="comentario" rows="3" placeholder="Digite seu comentário..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Adicionar Comentário</button>
         </form>
+
+        <!-- Lista de comentários -->
+        <div class="comentarios-list">
+            <?php if (!empty($comentarios)): ?>
+                <?php foreach ($comentarios as $comentario): ?>
+                    <div class="comentario-item details-comment-item">
+                        <div class="details-comment-header">
+                            <strong><?= htmlspecialchars($comentario->getUsuarioNome()) ?></strong>
+                            <small class="details-comment-meta">
+                                <?= date('d/m/Y H:i', strtotime($comentario->getDataCriacao())) ?>
+                                <?php if ((int) $comentario->getUsuarioId() === (int) ($_SESSION['user']['id'] ?? 0)): ?>
+                                    <a href="index.php?action=deletarComentario&id=<?= $comentario->getId() ?>&chamado_id=<?= $chamado['id'] ?>"
+                                       onclick="return confirm('Deseja excluir este comentario?')"
+                                       class="details-comment-delete">Excluir</a>
+                                <?php endif; ?>
+                            </small>
+                        </div>
+                        <div class="details-comment-body"><?= htmlspecialchars($comentario->getComentario()) ?></div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p class="details-comment-empty">Nenhum comentario ainda.</p>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
@@ -130,13 +167,13 @@ ob_start();
         const pdfField = document.getElementById('pdf-field');
 
         if (statusSelect.value === 'FINALIZADO') {
-            solucaoField.style.display = 'block';
-            pdfField.style.display = 'block';
-            solucaoView.style.display = 'none';
+            solucaoField.classList.remove('is-hidden');
+            pdfField.classList.remove('is-hidden');
+            solucaoView.classList.add('is-hidden');
         } else {
-            solucaoField.style.display = 'none';
-            pdfField.style.display = 'none';
-            solucaoView.style.display = 'block';
+            solucaoField.classList.add('is-hidden');
+            pdfField.classList.add('is-hidden');
+            solucaoView.classList.remove('is-hidden');
         }
     }
 
@@ -146,3 +183,4 @@ ob_start();
 <?php
 $content = ob_get_clean();
 require __DIR__ . '/../layout.php';
+

@@ -1,7 +1,8 @@
 <?php
-$topbarActive = $topbarActive ?? 'listar';
+$topbarActive = $topbarActive ?? 'chamados';
 $topbarUser = $topbarUser ?? ($_SESSION['user'] ?? null);
 $pageTitle = $pageTitle ?? 'ServiceDesk';
+$pageStyles = $pageStyles ?? [];
 
 function classeNavTopo($pagina, $paginaAtiva)
 {
@@ -16,6 +17,9 @@ function classeNavTopo($pagina, $paginaAtiva)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <link rel="stylesheet" href="css/index.css?v=2">
+    <?php foreach ($pageStyles as $stylesheet): ?>
+        <link rel="stylesheet" href="<?= htmlspecialchars($stylesheet) ?>">
+    <?php endforeach; ?>
 </head>
 
 <body>
@@ -25,8 +29,8 @@ function classeNavTopo($pagina, $paginaAtiva)
                 <span class="logo-text">ServiceDesk</span>
             </div>
             <nav class="topbar-nav">
-                <a href="index.php?action=listar" class="<?= classeNavTopo('listar', $topbarActive) ?>">Pesquisa</a>
-                <a href="index.php?action=listar&meus_chamados=1" class="<?= classeNavTopo('meus_chamados', $topbarActive) ?>">Meus Chamados</a>
+                <a href="index.php?action=dashboard" class="<?= classeNavTopo('dashboard', $topbarActive) ?>">Dashboard</a>
+                <a href="index.php?action=chamados" class="<?= classeNavTopo('chamados', $topbarActive) ?>">Chamados</a>
                 <a href="index.php?action=historico" class="<?= classeNavTopo('historico', $topbarActive) ?>">Historico</a>
                 <a href="index.php?action=perfil" class="<?= classeNavTopo('perfil', $topbarActive) ?>">Perfil</a>
             </nav>
@@ -42,6 +46,12 @@ function classeNavTopo($pagina, $paginaAtiva)
     </div>
 
     <?= $content ?>
+
+    <footer class="app-footer">
+        <div class="container-footer">
+            <span>Desenvolvido por Marcos Erick</span>
+        </div>
+    </footer>
 </body>
 
 </html>

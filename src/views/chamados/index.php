@@ -1,17 +1,13 @@
 ﻿<?php
-$topbarActive = !empty($_GET['meus_chamados']) ? 'meus_chamados' : 'listar';
+$topbarActive = 'chamados';
 $topbarUser = $_SESSION['user'] ?? null;
-$pageTitle = 'ServiceDesk - Ordem de Servico';
+$pageTitle = 'ServiceDesk - Chamados';
+$pageStyles = ['css/chamados.css?v=1'];
 ob_start();
 ?>
 
 <div class="container">
-    <h1 class="page-title">
-        ServiceDesk - Ordem de Servico
-        <?php if (!empty($_GET['meus_chamados'])): ?>
-            <?= ' - Meus Chamados' ?>
-        <?php endif; ?>
-    </h1>
+    <h1 class="page-title">ServiceDesk - Chamados</h1>
 
     <form method="POST" action="index.php?action=salvar">
         <div class="section">
@@ -61,7 +57,7 @@ ob_start();
                 </div>
             </div>
 
-            <div id="mensagemEquipamento" style="margin-top:10px; font-weight:bold; color:#8b0000;"></div>
+            <div id="mensagemEquipamento" class="equipamento-message"></div>
         </div>
 
         <div class="section">
@@ -154,7 +150,7 @@ ob_start();
             </div>
         </div>
 
-        <div class="section" id="tratamento-section" style="display: none;">
+        <div class="section is-hidden" id="tratamento-section">
             <div class="section-title">Informacoes de Tratamento</div>
             <div class="grid-2">
                 <div class="field full">
@@ -170,7 +166,7 @@ ob_start();
     </form>
 
     <?php if (!empty($_GET['created']) && !empty($_GET['chamado_numero'])): ?>
-        <div class="alert alert-success" style="margin-bottom: 20px;">
+        <div class="alert alert-success alert-space-bottom">
             Chamado <strong>#<?= htmlspecialchars($_GET['chamado_numero']) ?></strong> criado com sucesso.
         </div>
     <?php endif; ?>
@@ -251,7 +247,7 @@ ob_start();
         function toggleTratamentoFields() {
             const status = document.querySelector('select[name="status"]').value;
             const tratamentoSection = document.getElementById('tratamento-section');
-            tratamentoSection.style.display = status === 'FINALIZADO' ? 'block' : 'none';
+            tratamentoSection.classList.toggle('is-hidden', status !== 'FINALIZADO');
         }
 
         toggleTratamentoFields();

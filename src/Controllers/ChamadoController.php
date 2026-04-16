@@ -6,27 +6,33 @@ class ChamadoController
     private $tecnicoService;
     private $pdfService;
     private $finalizacaoService;
+    private $comentarioService;
 
-    public function __construct(ChamadoService $service, TecnicoService $tecnicoService, ?PdfService $pdfService = null, ChamadoFinalizacaoService $finalizacaoService)
+    public function __construct(ChamadoService $service, TecnicoService $tecnicoService, ChamadoFinalizacaoService $finalizacaoService, ?PdfService $pdfService = null, ?ChamadoComentarioService $comentarioService = null)
     {
         $this->service = $service;
         $this->tecnicoService = $tecnicoService;
         $this->pdfService = $pdfService;
         $this->finalizacaoService = $finalizacaoService;
+        $this->comentarioService = $comentarioService;
     }
 
     public function listar()
     {
+        if (isset($_GET['meus_chamados'])) {
+            $query = $_GET;
+            unset($query['meus_chamados']);
+            $query['action'] = 'chamados';
+            header('Location: index.php?' . http_build_query($query));
+            exit;
+        }
+
         $status = $_GET['status'] ?? null;
         $chamadoId = $this->normalizarInteiroPositivo($_GET['chamado_id'] ?? null);
         $numeroSerie = $this->normalizarTextoOpcional($_GET['numero_serie'] ?? null);
-        $meusChamados = $_GET['meus_chamados'] ?? null;
-        $tecnicoId = $_SESSION['user']['id'] ?? null;
 
         if ($status || $chamadoId || $numeroSerie) {
             $chamados = $this->service->filtrar($status, $numeroSerie, $chamadoId);
-        } elseif (!empty($meusChamados) && $tecnicoId) {
-            $chamados = $this->service->filtrarPorTecnico($tecnicoId);
         } else {
             $chamados = $this->service->listar();
         }
@@ -55,7 +61,18 @@ class ChamadoController
             exit;
         }
 
+        $comentarios = [];
+        if ($this->comentarioService) {
+            $comentarios = $this->comentarioService->listarComentarios((int) $id);
+        }
+
         require_once __DIR__ . '/../views/chamados/detalhes.php';
+    }
+
+    public function dashboard()
+    {
+        $chamados = $this->service->listarTudo();
+        require_once __DIR__ . '/../views/dashboard_page.php';
     }
 
     public function show()
@@ -96,7 +113,7 @@ class ChamadoController
         }
 
         $numeroChamado = str_pad($createdId, 5, '0', STR_PAD_LEFT);
-        header('Location: index.php?action=listar&created=1&chamado_numero=' . urlencode($numeroChamado));
+        header('Location: index.php?action=chamados&created=1&chamado_numero=' . urlencode($numeroChamado));
         exit;
     }
 
@@ -147,6 +164,53 @@ class ChamadoController
     public function update()
     {
         $this->atualizar();
+    }
+
+    public function adicionarComentario()
+    {
+        $chamadoId = $this->normalizarInteiroPositivo($_POST['chamado_id'] ?? null);
+        $comentario = trim($_POST['comentario'] ?? '');
+
+        if ($chamadoId === null || $comentario === '') {
+            $redirectUrl = $chamadoId !== null
+                ? 'index.php?action=detalhes&id=' . $chamadoId
+                : 'index.php?action=historico';
+            header('Location: ' . $redirectUrl);
+            exit;
+        }
+
+        $usuarioId = $this->usuarioAtualId();
+        $usuarioNome = $this->usuarioAtualNome();
+
+        if ($this->comentarioService && $usuarioNome !== null) {
+            $this->comentarioService->adicionarComentario($chamadoId, $usuarioId, $usuarioNome, $comentario);
+        }
+
+        header('Location: index.php?action=detalhes&id=' . $chamadoId);
+        exit;
+    }
+
+    public function deletarComentario()
+    {
+        $id = $this->normalizarInteiroPositivo($_GET['id'] ?? null);
+        $chamadoId = $this->normalizarInteiroPositivo($_GET['chamado_id'] ?? null);
+
+        if ($id === null) {
+            header('Location: index.php');
+            exit;
+        }
+
+        if ($this->comentarioService) {
+            $this->comentarioService->removerComentario($id);
+        }
+
+        if ($chamadoId === null) {
+            header('Location: index.php?action=historico');
+            exit;
+        }
+
+        header('Location: index.php?action=detalhes&id=' . $chamadoId);
+        exit;
     }
 
     public function deletar()
@@ -232,6 +296,18 @@ class ChamadoController
             ->tecnicoSupervisor($_POST['tecnico_supervisor'] ?? null)
             ->dataAtendimento($_POST['data_atendimento'] ?? null)
             ->build();
+    }
+
+    private function usuarioAtualId()
+    {
+        $usuarioId = $_SESSION['user']['id'] ?? null;
+        return is_numeric($usuarioId) ? (int) $usuarioId : null;
+    }
+
+    private function usuarioAtualNome()
+    {
+        $usuarioNome = trim((string) ($_SESSION['user']['nome'] ?? ''));
+        return $usuarioNome !== '' ? $usuarioNome : null;
     }
 
     private function normalizarInteiroPositivo($value)

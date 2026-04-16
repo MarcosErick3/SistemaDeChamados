@@ -4,7 +4,7 @@
     "type": "project",
     "require": {
         "php": ">=7.4",
-        "fpdf/fpdf": "^1.86"
+        "dompdf/dompdf": "^2.0"
     },
     "autoload": {
         "psr-4": {

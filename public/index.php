@@ -1,5 +1,9 @@
 <?php
 
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
+
 spl_autoload_register(function ($class) {
     $directories = [
         __DIR__ . '/../config',
@@ -32,14 +36,16 @@ $service = new ChamadoService($chamadoDao);
 $tecnicoService = new TecnicoService($tecnicoDao);
 $pdfService = new PdfService();
 $chamadoFinalizacaoService = new ChamadoFinalizacaoService($chamadoFinalizacaoDao);
+$chamadoComentarioService = new ChamadoComentarioService($conn);
 
-$chamadoController = new ChamadoController($service, $tecnicoService, $pdfService, $chamadoFinalizacaoService);
+$chamadoController = new ChamadoController($service, $tecnicoService, $chamadoFinalizacaoService, $pdfService, $chamadoComentarioService);
 $equipamentoController = new EquipamentoController($equipamentoDao);
 $loginController = new LoginController($tecnicoDao);
 
-$action = $_GET['action'] ?? 'listar';
+$action = $_GET['action'] ?? 'chamados';
 
 session_start();
+
 if (!isset($_SESSION['user']) && !in_array($action, ['entrar', 'login'], true)) {
     header('Location: index.php?action=entrar');
     exit;
@@ -47,6 +53,12 @@ if (!isset($_SESSION['user']) && !in_array($action, ['entrar', 'login'], true)) 
 
 switch ($action) {
     case 'listar':
+        $query = $_GET;
+        $query['action'] = 'chamados';
+        header('Location: index.php?' . http_build_query($query));
+        exit;
+
+    case 'chamados':
         $chamadoController->listar();
         break;
 
@@ -80,6 +92,18 @@ switch ($action) {
     case 'detalhes':
     case 'show':
         $chamadoController->detalhes();
+        break;
+
+    case 'dashboard':
+        $chamadoController->dashboard();
+        break;
+
+    case 'adicionarComentario':
+        $chamadoController->adicionarComentario();
+        break;
+
+    case 'deletarComentario':
+        $chamadoController->deletarComentario();
         break;
 
     case 'deletar':

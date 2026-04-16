@@ -17,6 +17,8 @@ class LoginController
 
             $user = $this->tecnicoDao->authenticate($email, $senha);
             if ($user) {
+                session_regenerate_id(true);
+                unset($user['senha']);
                 $_SESSION['user'] = $user;
                 header('Location: index.php?action=perfil');
                 exit;
@@ -35,6 +37,7 @@ class LoginController
 
     public function sair()
     {
+        $_SESSION = [];
         session_destroy();
         header('Location: index.php?action=entrar');
         exit;

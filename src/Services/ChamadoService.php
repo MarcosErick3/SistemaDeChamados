@@ -19,6 +19,11 @@ class ChamadoService
         return $this->dao->listarTudo();
     }
 
+    public function listarTudo()
+    {
+        return $this->dao->listarTudo();
+    }
+
     public function buscarPorId($id)
     {
         return $this->dao->findById($id);
@@ -57,11 +62,6 @@ class ChamadoService
     public function filtrar($status = null, $numeroSerie = null, $chamadoId = null)
     {
         return $this->dao->filtrar($status, $numeroSerie, $chamadoId);
-    }
-
-    public function filtrarPorTecnico($tecnicoId)
-    {
-        return $this->dao->filtrarPorTecnico($tecnicoId);
     }
 
     public function listarHistorico()
