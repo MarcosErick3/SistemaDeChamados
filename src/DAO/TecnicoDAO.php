@@ -74,12 +74,24 @@ class TecnicoDAO
     {
         $sql = "SELECT * FROM tecnicos WHERE email = :email";
         $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue(':email', $email);
+        $stmt->bindValue(':email', trim((string) $email));
         $stmt->execute();
         $tecnico = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($tecnico && password_verify($senha, $tecnico['senha'])) {
-            return $tecnico;
+
+        if (!$tecnico || !password_verify($senha, $tecnico['senha'])) {
+            return false;
         }
-        return false;
+
+        if (password_needs_rehash($tecnico['senha'], PASSWORD_DEFAULT)) {
+            $novoHash = password_hash($senha, PASSWORD_DEFAULT);
+            $update = $this->conn->prepare("UPDATE tecnicos SET senha = :senha WHERE id = :id");
+            $update->bindValue(':senha', $novoHash);
+            $update->bindValue(':id', $tecnico['id'], PDO::PARAM_INT);
+            $update->execute();
+
+            $tecnico['senha'] = $novoHash;
+        }
+
+        return $tecnico;
     }
 }

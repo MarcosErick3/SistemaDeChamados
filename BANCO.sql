@@ -43,10 +43,10 @@ INSERT INTO `equipamentos` (`id`, `numero_serie`, `numero_patrimonio`, `descrica
 
 -- Copiando dados para a tabela servicedesk.tecnicos: ~4 rows (aproximadamente)
 INSERT INTO `tecnicos` (`id`, `nome`, `email`, `telefone`, `senha`) VALUES
-	(1, 'Marcos Erick', 'admin@sistema.com', '11999990001', '.MjgFYci..2XhhBniCCyC5IIx0Yo6KkGeKfXEQN.'),
-	(2, 'Ana Paula Ramos', 'ana.ramos@empresa.com', '11999990002', '.MjgFYci..2XhhBniCCyC5IIx0Yo6KkGeKfXEQN.'),
-	(3, 'Bruno Costa', 'bruno.costa@empresa.com', '11999990003', '.MjgFYci..2XhhBniCCyC5IIx0Yo6KkGeKfXEQN.'),
-	(4, 'Carla Mendes', 'carla.mendes@empresa.com', '11999990004', '.MjgFYci..2XhhBniCCyC5IIx0Yo6KkGeKfXEQN.');
+	(1, 'Marcos Erick', 'admin@sistema.com', '11999990001', '$2y$10$RxfulX0yiHEYNxfq4jKkX.HMy5huHD9obSCMAaAB.49ajLquabNz.'),
+	(2, 'Ana Paula Ramos', 'ana.ramos@empresa.com', '11999990002', '$2y$10$RxfulX0yiHEYNxfq4jKkX.HMy5huHD9obSCMAaAB.49ajLquabNz.'),
+	(3, 'Bruno Costa', 'bruno.costa@empresa.com', '11999990003', '$2y$10$RxfulX0yiHEYNxfq4jKkX.HMy5huHD9obSCMAaAB.49ajLquabNz.'),
+	(4, 'Carla Mendes', 'carla.mendes@empresa.com', '11999990004', '$2y$10$RxfulX0yiHEYNxfq4jKkX.HMy5huHD9obSCMAaAB.49ajLquabNz.');
 
 
 	CREATE DATABASE IF NOT EXISTS `servicedesk` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
