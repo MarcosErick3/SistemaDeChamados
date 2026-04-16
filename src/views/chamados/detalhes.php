@@ -116,7 +116,7 @@ ob_start();
             </div>
         </form>
 
-        <a href="index.php?action=deletar&id=<?= $chamado['id'] ?>" class="btn btn-danger details-delete-link" onclick="return confirm('Deseja realmente excluir este chamado?');">Excluir Chamado</a>
+        
     </div>
 
     <!-- Seção de Comentários -->
