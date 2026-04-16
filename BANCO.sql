@@ -48,6 +48,100 @@ INSERT INTO `tecnicos` (`id`, `nome`, `email`, `telefone`, `senha`) VALUES
 	(3, 'Bruno Costa', 'bruno.costa@empresa.com', '11999990003', '.MjgFYci..2XhhBniCCyC5IIx0Yo6KkGeKfXEQN.'),
 	(4, 'Carla Mendes', 'carla.mendes@empresa.com', '11999990004', '.MjgFYci..2XhhBniCCyC5IIx0Yo6KkGeKfXEQN.');
 
+
+	CREATE DATABASE IF NOT EXISTS `servicedesk` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `servicedesk`;
+
+-- Copiando estrutura para tabela servicedesk.chamados
+CREATE TABLE IF NOT EXISTS `chamados` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `equipamento_id` int NOT NULL,
+  `criado_por` varchar(100) DEFAULT NULL,
+  `status` enum('ABERTO','EM ANDAMENTO','FINALIZADO') NOT NULL DEFAULT 'ABERTO',
+  `tipo_chamado` varchar(100) DEFAULT NULL,
+  `prioridade` varchar(50) DEFAULT NULL,
+  `tecnico` varchar(100) DEFAULT NULL,
+  `assunto` varchar(255) NOT NULL,
+  `descricao` text NOT NULL,
+  `nome_usuario` varchar(100) DEFAULT NULL,
+  `email_usuario` varchar(150) DEFAULT NULL,
+  `ddd_usuario` varchar(5) DEFAULT NULL,
+  `telefone_usuario` varchar(20) DEFAULT NULL,
+  `tecnico_supervisor` varchar(100) DEFAULT NULL,
+  `diagnostico` varchar(255) DEFAULT NULL,
+  `data_atendimento` date DEFAULT NULL,
+  `data_abertura` datetime DEFAULT CURRENT_TIMESTAMP,
+  `data_finalizacao` datetime DEFAULT NULL,
+  `tecnico_id` int DEFAULT NULL,
+  `solucao` text,
+  `pdf_path` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `equipamento_id` (`equipamento_id`),
+  KEY `chamados_tecnico_fk` (`tecnico_id`),
+  CONSTRAINT `chamados_ibfk_1` FOREIGN KEY (`equipamento_id`) REFERENCES `equipamentos` (`id`),
+  CONSTRAINT `chamados_tecnico_fk` FOREIGN KEY (`tecnico_id`) REFERENCES `tecnicos` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Exportação de dados foi desmarcado.
+
+-- Copiando estrutura para tabela servicedesk.chamado_comentarios
+CREATE TABLE IF NOT EXISTS `chamado_comentarios` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `chamado_id` int NOT NULL,
+  `usuario_id` int NOT NULL,
+  `usuario_nome` varchar(255) NOT NULL,
+  `comentario` text NOT NULL,
+  `data_criacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `chamado_id` (`chamado_id`),
+  KEY `usuario_id` (`usuario_id`),
+  CONSTRAINT `chamado_comentarios_ibfk_1` FOREIGN KEY (`chamado_id`) REFERENCES `chamados` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `chamado_comentarios_ibfk_2` FOREIGN KEY (`usuario_id`) REFERENCES `tecnicos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Exportação de dados foi desmarcado.
+
+-- Copiando estrutura para tabela servicedesk.chamado_finalizacoes
+CREATE TABLE IF NOT EXISTS `chamado_finalizacoes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `chamado_id` int NOT NULL,
+  `solucao` text,
+  `pdf_path` varchar(255) DEFAULT NULL,
+  `data_finalizacao` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `chamado_id` (`chamado_id`),
+  KEY `idx_chamado_id` (`chamado_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Exportação de dados foi desmarcado.
+
+-- Copiando estrutura para tabela servicedesk.equipamentos
+CREATE TABLE IF NOT EXISTS `equipamentos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `numero_serie` varchar(100) NOT NULL,
+  `numero_patrimonio` varchar(100) NOT NULL,
+  `descricao` varchar(255) NOT NULL,
+  `equipamento` varchar(100) NOT NULL,
+  `unidade` varchar(100) NOT NULL,
+  `local` varchar(100) NOT NULL,
+  `cidade` varchar(100) NOT NULL,
+  `uf` varchar(2) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `numero_serie` (`numero_serie`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Exportação de dados foi desmarcado.
+
+-- Copiando estrutura para tabela servicedesk.tecnicos
+CREATE TABLE IF NOT EXISTS `tecnicos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nome` varchar(100) NOT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `telefone` varchar(30) DEFAULT NULL,
+  `senha` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
